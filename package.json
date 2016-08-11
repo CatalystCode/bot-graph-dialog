@@ -1,0 +1,30 @@
+{
+  "name": "bot-graph-dialog",
+  "version": "1.0.0",
+  "description": "bot graph dialog",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CatalystCode/bot-graph-dialog.git"
+  },
+  "keywords": [
+    "bot",
+    "graph",
+    "dialog"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CatalystCode/bot-graph-dialog/issues"
+  },
+  "homepage": "https://github.com/CatalystCode/bot-graph-dialog#readme",
+  "dependencies": {
+    "botbuilder": "^3.2.3",
+    "extend": "^3.0.0",
+    "jsep": "^0.3.0",
+    "strformat": "0.0.7"
+  }
+}

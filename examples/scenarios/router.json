@@ -1,0 +1,37 @@
+{
+  "id": "router",
+  "type": "sequence",
+  "steps": [
+    {
+      "id": "scenarioIntent",
+      "type": "score",
+      "data": { 
+        "models": [ "dialog-router" ]
+      },
+      "scenarios": [
+        {
+          "condition": "scenarioIntent.intent == 'stomachPain'",
+          "steps": [ { "subScenario": "stomachPain" } ]
+        },
+        {
+          "condition": "scenarioIntent.intent == 'botGames'",
+          "steps": [ { "subScenario": "botGames" } ]
+        }
+      ]
+    }
+  ],
+  "models": [
+    {
+      "name": "dialog-router",
+      "url": "https://api.projectoxford.ai/luis/v1/application?id=86e0ddab-7309-45e7-937a-ed92725004cf&subscription-key=d7b46a6c72bf46c1b67f2c4f21acf960&q="
+    },
+    {
+      "name": "bot-common-responses",
+      "url": "https://api.projectoxford.ai/luis/v1/application?id=7ff935f4-fe33-4a2a-b155-b82dbbf456ed&subscription-key=d7b46a6c72bf46c1b67f2c4f21acf960&q="
+    },
+    {
+      "name": "Bottle",
+      "url": "https://api.projectoxford.ai/luis/v1/application?id=0a2cc164-5a19-47b7-b85e-41914d9037ba&subscription-key=d7b46a6c72bf46c1b67f2c4f21acf960&q="
+    }
+  ]
+}
