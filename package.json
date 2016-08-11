@@ -1,7 +1,7 @@
 {
-  "name": "bot-graph-dialog",
+  "name": "graph-bot-dialog",
   "version": "1.0.0",
-  "description": "bot graph dialog",
+  "description": "graph bot dialog",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -25,6 +25,9 @@
     "botbuilder": "^3.2.3",
     "extend": "^3.0.0",
     "jsep": "^0.3.0",
-    "strformat": "0.0.7"
+    "promise": "^7.1.1",
+    "request-promise": "^4.1.1",
+    "strformat": "0.0.7",
+    "underscore": "^1.8.3"
   }
 }
