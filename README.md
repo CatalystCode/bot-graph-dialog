@@ -1,4 +1,4 @@
-# graph-bot-dialog
+# bot-graph-dialog
 Graph Bot Dialog
 
 
