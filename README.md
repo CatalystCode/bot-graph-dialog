@@ -1,7 +1,8 @@
 # bot-graph-dialog
 Graph Bot Dialog
 
-*Note*
+**Note**
+
 This is a quick&dirty code that was developed in 3 days during a hackfest.
 Any use of this code it totally on your own responsibility.
 
