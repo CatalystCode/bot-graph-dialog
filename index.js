@@ -1,2 +1,2 @@
 
-module.exports = require('./lib/BotGraphDialog');
+module.exports = require('./lib/GraphDialog');

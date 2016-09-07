@@ -5,7 +5,7 @@ import node = require('./Node');
 
 
 export interface IGraphDialogOptions extends navigator.INavigatorOptions { 
-	
+
 }
 
 export class GraphDialog {
