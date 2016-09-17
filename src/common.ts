@@ -31,7 +31,7 @@ export class List<T> {
     }
 
     get(index: number): T {
-        return this.items[index];
+        return index < this.size() ? this.items[index] : null;
     }
 }
 
