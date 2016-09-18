@@ -2,7 +2,7 @@
 import navigator = require('./Navigator');
 import node = require('./Node');
 import Luis = require('./LuisModel');
-
+import IntentScorer = require('./IntentScorer');
 import builder = require('botbuilder');
 import path = require('path');
 import common = require('./common');
@@ -19,13 +19,24 @@ export interface IGraphDialogOptions extends navigator.INavigatorOptions {
 export class GraphDialog {
 
 	private nav: navigator.Navigator;
+  private intentScorer: IntentScorer.IIntentScorer;
 	
 
 	constructor(private options: IGraphDialogOptions) {
 		this.nav = new navigator.Navigator(options);
+    this.intentScorer = new IntentScorer.IntentScorer();
 		options.steps = options.steps || 100;
 	}
 
+
+/*
+	// TODO cancel using the c'tor
+	public static fromJson(filePath: string, options: IGraphDialogOptions) {
+		// require file
+		var json = {};//
+		return new GraphDialog(options);
+	}
+*/
 	public getSteps(): any[] {
 		console.log('get steps');
 
@@ -82,32 +93,22 @@ export class GraphDialog {
         break;
         
       case NodeType.score:
-          session.send('not implemented');
-					console.warn('NOT IMPLEMENTED YET');
-
-        var botModels = currentNode.data.models.map(model => {
-          return this.nav.models[model];
-        });
-
-				// TODO: implement
-				let intentScorer: any = {};
-				/*
+        var botModels = currentNode.data.models.map(model => this.nav.models[model]);
+        
         var text = session.dialogData[currentNode.data.source] || session.dialogData._lastMessage;
-        console.log('LUIS scoring for node: %s, text: \'%s\' LUIS models:', currentNode.id, text, botModels);
-        intentScorer.collectIntents(botModels, text, currentNode.data.threashold)
-          .then(
-            function (intents) {
+        console.log(`LUIS scoring for node: ${currentNode.id}, text: \'${text}\' LUIS models: ${botModels}`);
+
+        this.intentScorer.collectIntents(botModels, text, currentNode.data.threashold)
+          .then(intents => {
               if (intents && intents.length) {
-                collectResponse(session, { response: intents[0] });
-                next();
+                this.stepResultCollectionHandler(session, { response: intents[0] }, null);
               }
             },
-            function (error) {
+            function (err) {
               throw error;
             }
           );
           
-*/
         break;
 
       case NodeType.handler:

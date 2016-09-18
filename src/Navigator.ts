@@ -19,7 +19,7 @@ let List = common.List;
 let conditionHandler = ConditionHandler.ConditionHandler;
 
 export interface INavigatorOptions {
-	graph: any;
+	graph?: any;
 	scenariosPath?: string;
 	handlersPath?: string;
 } 
@@ -29,7 +29,7 @@ export class Navigator {
 	private root: nodeAPI.INode;
   private uniqueNodeId: number = 1;
   private nodeIds: { [id: string] : any } = {};
-  
+
   public models: { [id: string] : Luis.ILuisModel } = {};
 
   //private nodes: { [id: string] : nodeAPI.INode; } = {};
