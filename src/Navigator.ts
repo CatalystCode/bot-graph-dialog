@@ -81,7 +81,7 @@ export class Navigator {
     }
 
     console.log(`getNextNode: [current: ${current.id}, next: ${next && next.id}]`);
-    session.dialogData._currentNodeId = next.id;
+    session.dialogData._currentNodeId = next && next.id;
 
     return next;
   }

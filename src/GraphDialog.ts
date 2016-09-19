@@ -101,7 +101,7 @@ export class GraphDialog {
         this.intentScorer.collectIntents(botModels, text, currentNode.data.threashold)
           .then(intents => {
               if (intents && intents.length) {
-                this.stepResultCollectionHandler(session, { response: intents[0] }, null);
+                this.stepResultCollectionHandler(session, { response: intents[0] }, next);
               }
             },
             function (err) {
