@@ -31,7 +31,7 @@ export interface IScenario {
 }
 
 export interface IParserOptions {
-	graph?: any;
+	scenario: string;
 	scenariosPath?: string;
 	handlersPath?: string;
 } 
@@ -42,7 +42,7 @@ export interface INavigatorOptions {
 
 export interface IGraphDialogOptions extends INavigatorOptions { 
 	parser?: IParserOptions;
-	steps: number
+	steps?: number
 }
 
 

@@ -17,11 +17,14 @@ export class GraphDialog {
   private intentScorer: interfaces.IIntentScorer;
 	
 
-	constructor(private options: interfaces.IGraphDialogOptions) {
-		let parser = new Parser(options.parser);
+	constructor(private options: interfaces.IGraphDialogOptions = {}) {
+		if (typeof this.options.steps !== 'number') {
+      this.options.steps = 100;
+    }
+    
+    let parser = new Parser(options.parser);
     this.nav = new Navigator(parser);
     this.intentScorer = new IntentScorer();
-		options.steps = options.steps || 100;
 	}
 
 

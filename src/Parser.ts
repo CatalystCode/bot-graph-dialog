@@ -3,6 +3,7 @@ import { Scenario } from './Scenario';
 import { ConditionHandler } from './ConditionHandler';
 import { LuisModel } from './Luis';
 import { Map, List } from './Common';
+import { Utils as utils } from './Utils';
 import builder = require('botbuilder');
 import path = require('path');
 import interfaces = require('./Interfaces');
@@ -16,12 +17,16 @@ export class Parser {
 
   private uniqueNodeId: number = 1;
 
-  public root: interfaces.INode;
+  public root: interfaces.INode = null;
   private nodes = new Map<any>();
   public models = new Map<interfaces.ILuisModel>();
 
 	constructor(private options: interfaces.IParserOptions) {
-    this.root = options.graph ? this.normalizeGraph(options.graph) : null;
+    if (typeof options.scenariosPath === 'string' && typeof options.scenario === 'string') {
+      let scenarioPath = path.join(options.scenariosPath, options.scenario);
+      var scenario = utils.loadJson(scenarioPath);
+      this.root = this.normalizeGraph(scenario);
+    }
 	}
 
   public getNodeInstanceById(id: string) : interfaces.INode {
@@ -99,8 +104,8 @@ export class Parser {
       // In case of subScenario, copy all subScenario to current node
       if (this.isSubScenario(nodeItem)) {
           console.log(`sub-scenario for node: ${nodeItem.id} [loading sub scenario: ${nodeItem.subScenario}]`);
-          var subScenarioPath = path.join(this.options.scenariosPath, nodeItem.subScenario + '.json');
-          var subScenario = require(subScenarioPath);
+          var subScenarioPath = path.join(this.options.scenariosPath, nodeItem.subScenario);
+          var subScenario = utils.loadJson(subScenarioPath);
           extend(true, nodeItem, subScenario);
           this.updateModels(subScenario.models);
       }
