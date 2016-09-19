@@ -30,19 +30,26 @@ export interface IScenario {
 		node: INode;
 }
 
-export interface INavigatorOptions {
+export interface IParserOptions {
 	graph?: any;
 	scenariosPath?: string;
 	handlersPath?: string;
 } 
 
+export interface INavigatorOptions {
+	
+} 
+
+export interface IGraphDialogOptions extends INavigatorOptions { 
+	parser?: IParserOptions;
+	steps: number
+}
+
+
 export interface IIntentScorer {
   collectIntents(models: ILuisModel[], text: string, threashold: number): Promise<IIntentScore[]>;
 }
 
-export interface IGraphDialogOptions extends INavigatorOptions { 
-	steps: number
-}
 
 
 

@@ -1,4 +1,5 @@
 
+import { Parser } from './Parser';
 import { Navigator } from './Navigator';
 import { IntentScorer } from './IntentScorer';
 import interfaces = require('./Interfaces');
@@ -10,8 +11,6 @@ var strformat = require('strformat');
 
 let NodeType = interfaces.NodeType;
 
-
-
 export class GraphDialog {
 
 	private nav: Navigator;
@@ -19,7 +18,8 @@ export class GraphDialog {
 	
 
 	constructor(private options: interfaces.IGraphDialogOptions) {
-		this.nav = new Navigator(options);
+		let parser = new Parser(options.parser);
+    this.nav = new Navigator(parser);
     this.intentScorer = new IntentScorer();
 		options.steps = options.steps || 100;
 	}
@@ -109,7 +109,7 @@ export class GraphDialog {
 
       case NodeType.handler:
         var handlerName = currentNode.data.name;
-        var handlerPath = path.join(this.options.handlersPath, handlerName)
+        var handlerPath = path.join(this.options.parser.handlersPath, handlerName)
         var handler = require(handlerPath);
         console.log('calling handler: ', currentNode.id, handlerName);
         return handler(session, next, currentNode.data);

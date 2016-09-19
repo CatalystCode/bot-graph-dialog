@@ -55,5 +55,15 @@ export class Map<T> {
     get(key: string): T {
         return this.items[key];
     }
+
+    /*
+    keys() : string[] {
+        return Object.keys(this.items);
+    }
+
+    values(): T[] {
+        return Object.keys(this.items).map(key => this.items[key]);
+    }
+    */
 }
 
