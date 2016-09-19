@@ -1,44 +1,35 @@
-import nodeAPI = require('./Node');
-import scenarioAPI = require('./Scenario');
-import graph = require('./GraphDialog');
-import ConditionHandler = require('./ConditionHandler');
-import Luis = require('./LuisModel');
-
+import { Node } from './Node';
+import { Scenario } from './Scenario';
+import { ConditionHandler } from './ConditionHandler';
+import { LuisModel } from './Luis';
+import { Map } from './Common';
 import builder = require('botbuilder');
-
 import path = require('path');
+import interfaces = require('./Interfaces');
 
 var extend = require('extend');
 var strformat = require('strformat');
 
 import common = require('./common');
 
-let Node = nodeAPI.Node;
-let NodeType = nodeAPI.NodeType;
+let NodeType = interfaces.NodeType;
 let List = common.List;
-let conditionHandler = ConditionHandler.ConditionHandler;
-
-export interface INavigatorOptions {
-	graph?: any;
-	scenariosPath?: string;
-	handlersPath?: string;
-} 
 
 export class Navigator {
 
-	private root: nodeAPI.INode;
+	private root: interfaces.INode;
   private uniqueNodeId: number = 1;
   private nodeIds: { [id: string] : any } = {};
 
-  public models: { [id: string] : Luis.ILuisModel } = {};
+  public models = new Map<interfaces.ILuisModel>();
 
   //private nodes: { [id: string] : nodeAPI.INode; } = {};
 
-	constructor(private options: INavigatorOptions) {
+	constructor(private options: interfaces.INavigatorOptions) {
 		this.root = this.normalizeGraph(options.graph);
 	}
 
-  public getCurrentNode(session: builder.Session): nodeAPI.INode {
+  public getCurrentNode(session: builder.Session): interfaces.INode {
     console.log('getCurrentNode');
     let currNodeId = <string>session.dialogData._currentNodeId;
     if (!currNodeId) {
@@ -46,24 +37,24 @@ export class Navigator {
       return this.root;
     }
 
-    let current : nodeAPI.INode = this.nodeIds[currNodeId]._instance;
+    let current : interfaces.INode = this.nodeIds[currNodeId]._instance;
     return current;
   }
 
 
-  public getNextNode(session: builder.Session) : nodeAPI.INode {
+  public getNextNode(session: builder.Session) : interfaces.INode {
     console.log('getNextNode');
-    let next : nodeAPI.INode = null;
-    let current : nodeAPI.INode = this.nodeIds[session.dialogData._currentNodeId]._instance;
+    let next : interfaces.INode = null;
+    let current : interfaces.INode = this.nodeIds[session.dialogData._currentNodeId]._instance;
 
     // If there are child scenarios, see if one of them answers a condition
     // In case it is, choose the first step in that scenario to as the next step
-    let scenarios: common.List<scenarioAPI.IScenario> = current.scenarios;
+    let scenarios: common.List<interfaces.IScenario> = current.scenarios;
     for (var i=0; i<current.scenarios.size(); i++) {
       var scenario = current.scenarios.get(i);
 
       // TODO move evaluateExpression into Scenario class
-      if (conditionHandler.evaluateExpression(session.dialogData, scenario.condition)) {
+      if (ConditionHandler.evaluateExpression(session.dialogData, scenario.condition)) {
         next = scenario.node || scenario.steps.get(0);
       }
     }
@@ -87,7 +78,7 @@ export class Navigator {
   }
 
  
-  private normalizeGraph(origGraph: any): nodeAPI.INode {
+  private normalizeGraph(origGraph: any): interfaces.INode {
     
     // create a copy of the graph object
     var graph: any = {};
@@ -109,21 +100,21 @@ export class Navigator {
     // second iteration- connect reference to Node instances
     for (let nodeId in nodeIds) {
         let node = nodeIds[nodeId];
-        let inst = <nodeAPI.INode>node._instance;
+        let inst = <interfaces.INode>node._instance;
         if (node._parent) inst.parent = node._parent._instance;
         if (node._prev) inst.prev = node._prev._instance;
         if (node._next) inst.next = node._next._instance;
         (node.steps || []).forEach((step: any) => {
-          inst.steps.add(<nodeAPI.INode>step._instance);
+          inst.steps.add(<interfaces.INode>step._instance);
         });
         (node.scenarios || []).forEach((scenario: any) => {
-          let scenarioNode: nodeAPI.INode = null;
+          let scenarioNode: interfaces.INode = null;
           if (scenario.nodeId) {
             scenarioNode = this.nodeIds[scenario.nodeId]._instance;
           }
-          let scene = new scenarioAPI.Scenario(<string>scenario.condition, scenarioNode);
+          let scene = new Scenario(<string>scenario.condition, scenarioNode);
           (scenario.steps || []).forEach((step: any) => {
-            scene.steps.add(<nodeAPI.INode>step._instance);
+            scene.steps.add(<interfaces.INode>step._instance);
           });
           inst.scenarios.add(scene);
         });
@@ -140,7 +131,7 @@ export class Navigator {
       delete node._next;
     }
 
-    return <nodeAPI.INode>graph._instance;
+    return <interfaces.INode>graph._instance;
   }
 
   private initNodes(parent: any, nodes: any[]) : void {
@@ -206,7 +197,7 @@ export class Navigator {
   // that will create the navigator and models
 	private updateModels(models: any[]): void {
       (models || []).forEach(model => { 
-				this.models[model.name] = new Luis.LuisModel(model.name, model.url); 
+				this.models.add(model.name, new LuisModel(model.name, model.url));
 			});
 	}
 

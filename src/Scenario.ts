@@ -1,23 +1,16 @@
 
 import common = require('./common');
-import node = require('./Node');
+import interfaces = require('./Interfaces');
 
-
-export interface IScenario {
-    condition: string;
-		steps?: common.List<node.INode>;
-		node: node.INode;
-}
-
-export class Scenario implements IScenario {
+export class Scenario implements interfaces.IScenario {
 
 	public condition: string;	
-	public steps: common.List<node.INode>;
-	public node: node.INode;
+	public steps: common.List<interfaces.INode>;
+	public node: interfaces.INode;
 
-	constructor(condition: string, node: node.INode = null) {
+	constructor(condition: string, node: interfaces.INode = null) {
 		this.condition = condition;
 		this.node = node;
-		this.steps = new common.List<node.INode>()
+		this.steps = new common.List<interfaces.INode>()
 	}
 }

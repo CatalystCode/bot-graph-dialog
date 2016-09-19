@@ -1,30 +1,26 @@
 
-import navigator = require('./Navigator');
-import node = require('./Node');
-import Luis = require('./LuisModel');
-import IntentScorer = require('./IntentScorer');
+import { Navigator } from './Navigator';
+import { IntentScorer } from './IntentScorer';
+import interfaces = require('./Interfaces');
 import builder = require('botbuilder');
 import path = require('path');
-import common = require('./common');
 
 var strformat = require('strformat');
 
 
-let NodeType = node.NodeType;
+let NodeType = interfaces.NodeType;
 
-export interface IGraphDialogOptions extends navigator.INavigatorOptions { 
-	steps: number
-}
+
 
 export class GraphDialog {
 
-	private nav: navigator.Navigator;
-  private intentScorer: IntentScorer.IIntentScorer;
+	private nav: Navigator;
+  private intentScorer: interfaces.IIntentScorer;
 	
 
-	constructor(private options: IGraphDialogOptions) {
-		this.nav = new navigator.Navigator(options);
-    this.intentScorer = new IntentScorer.IntentScorer();
+	constructor(private options: interfaces.IGraphDialogOptions) {
+		this.nav = new Navigator(options);
+    this.intentScorer = new IntentScorer();
 		options.steps = options.steps || 100;
 	}
 
@@ -66,7 +62,7 @@ export class GraphDialog {
 	}
 
 
-
+  // TODO: add option for 'bot is typeing' message before sending the answer
   private stepInteractionHandler(session: builder.Session, results, next): void {
     session.dialogData._lastMessage = session.message && session.message.text;
     let currentNode = this.nav.getCurrentNode(session);
@@ -93,7 +89,7 @@ export class GraphDialog {
         break;
         
       case NodeType.score:
-        var botModels = currentNode.data.models.map(model => this.nav.models[model]);
+        var botModels = currentNode.data.models.map(model => this.nav.models.get(model));
         
         var text = session.dialogData[currentNode.data.source] || session.dialogData._lastMessage;
         console.log(`LUIS scoring for node: ${currentNode.id}, text: \'${text}\' LUIS models: ${botModels}`);

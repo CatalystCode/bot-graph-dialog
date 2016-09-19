@@ -1,9 +1,11 @@
 
+
+/*
 export interface IHandler {
     handle: () => void
 }
 
-
+*/
 /*
 export abstract class Handler implements IHandler {
 
@@ -54,3 +56,4 @@ export class Map<T> {
         return this.items[key];
     }
 }
+
