@@ -10,15 +10,15 @@ var _ = require('underscore');
 export class IntentScorer implements interfaces.IIntentScorer {
 
 	 public collectIntents(models: interfaces.ILuisModel[], text: string, threashold: number = 0): Promise<interfaces.IIntentScore[]> {
-		 	let self = this;
+
+			let promises: Promise<any>[] = models.map(model => {
+				return this.scoreIntent(model, text, threashold);
+			});
+
 			return new Promise(function (resolve, reject) {
 				if (!models) return reject('Please provide models array');
 				if (!text) return reject('Please provide text');
 
-				let promises: Promise<any>[] = models.map(model => {
-					return self.scoreIntent(model, text, threashold);
-				})
-			
 				Promise.all(promises)
 					.then(intents => {
 						var sortedIntents = _.sortBy(_.compact(intents), 'score').reverse();

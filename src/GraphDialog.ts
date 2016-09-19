@@ -52,13 +52,12 @@ export class GraphDialog {
 	*/
 
 		for (var i=0; i<this.options.steps; i++) {
-			steps.push(this.stepInteractionHandler.bind(this));
-			steps.push(this.stepResultCollectionHandler.bind(this));
-			steps.push(this.setNextStepHandler.bind(this));
+			steps.push((session: builder.Session, results, next) => this.stepInteractionHandler(session, results, next));
+      steps.push((session: builder.Session, results, next) => this.stepResultCollectionHandler(session, results, next));
+      steps.push((session: builder.Session, results, next) => this.setNextStepHandler(session, results, next));
 		}
 
 		return steps;
-
 	}
 
 
@@ -72,12 +71,12 @@ export class GraphDialog {
 
       case NodeType.text:
         var text = strformat(currentNode.data.text, session.dialogData);
-        console.log('sending text for node %s, text: \'%s\'', currentNode.id, text);
+        console.log(`sending text for node ${currentNode.id}, text: \'${text}\'`);
         session.send(text);
         return next();
 
       case NodeType.prompt:
-        console.log('builder.ListStyle.button', builder.ListStyle["button"]); 
+        console.log(`builder.ListStyle.button: ${builder.ListStyle["button"]}`); 
         var promptType = currentNode.data.type || 'text';
         builder.Prompts[promptType](
           session, 
@@ -167,16 +166,13 @@ export class GraphDialog {
 
     if (nextNode) {
       console.log(`step handler node: ${nextNode.id}`);
-      //session.dialogData._currentNodeId = nextNode.id;
     }
     else {
 				console.log('ending dialog');
-				 session.endDialog();
-				 return;
+				session.endDialog();
+				return;
 			}
 
     return next();
   }
-
-
 }
