@@ -34,25 +34,39 @@ export class Navigator implements INavigator {
     this.nodes[node.id()] = node;
   }
 
+  public getSteps(): builder.IGraphStep[] {
+    let steps: builder.IGraphStep[] = [];
+    for (let i=0; i< 100; i++) {
+      // todo: check why we need the bind...
+      steps.push(this.executeNextStep.bind(this));
+    }
+    return steps;
+  }
+
   public getNext(session: builder.Session): builder.IGraphStep {
     return (session: builder.Session, result?: any | builder.IDialogResult<any>, skip?: (results?: builder.IDialogResult<any>) => void): any => {
-      let currStepType = this.getCurrentStepType(session);
-      switch (currStepType) {
-        case StepTypes.interaction:
-          this.stepInteractionHandler(session, result, skip);
-          this.setNextStepType(session, StepTypes.collection);
-          break;
-        case StepTypes.collection:
-          this.stepResultCollectionHandler(session, result, skip);
-          this.setNextStepType(session, StepTypes.setNext);
-          break;
-        case StepTypes.setNext:
-          this.setNextStepHandler(session, result, skip);
-          this.setNextStepType(session, StepTypes.interaction);
-          break;
-        default:
-          throw new Error(`Invalid step type: ${currStepType}`);
-      }
+      this.executeNextStep(session, result, skip);
+    }
+  }
+
+  private executeNextStep(session: builder.Session, result?: any | builder.IDialogResult<any>, skip?: (results?: builder.IDialogResult<any>) => void): any {
+    let currStepType = this.getCurrentStepType(session);
+    console.log(`executeNextStep: ${currStepType}`);
+    switch (currStepType) {
+      case StepTypes.interaction:
+        this.setNextStepType(session, StepTypes.collection);
+        this.stepInteractionHandler(session, result, skip);
+        break;
+      case StepTypes.collection:
+        this.setNextStepType(session, StepTypes.setNext);
+        this.stepResultCollectionHandler(session, result, skip);
+        break;
+      case StepTypes.setNext:
+        this.setNextStepType(session, StepTypes.interaction);
+        this.setNextStepHandler(session, result, skip);
+        break;
+      default:
+        throw new Error(`Invalid step type: ${currStepType}`);
     }
   }
 
@@ -80,29 +94,30 @@ export class Navigator implements INavigator {
     // TODO: move _lastMessage key to consts
     session.dialogData._lastMessage = session.message && session.message.text;
     let currentNode = this.getCurrentNode(session);
-    console.log(`perform action: ${currentNode.id()}, ${currentNode.type}`);
+    console.log(`perform action: ${currentNode.id()}, ${currentNode.type()}`);
 
     switch (currentNode.type()) {
 
-      case n.NodeType.text:
-        var text = strformat(currentNode.data.text, session.dialogData);
+      case n.NodeTypes.text:
+        var text = strformat((<n.TextNode>currentNode).text(), session.dialogData);
         console.log(`sending text for node ${currentNode.id()}, text: \'${text}\'`);
         session.send(text);
         return next();
 
-        /*
-      case NodeType.prompt:
+        
+      case n.NodeTypes.prompt:
         console.log(`builder.ListStyle.button: ${builder.ListStyle["button"]}`); 
-        var promptType = currentNode.data.type || 'text';
+        var promptType = /*currentNode.data.type || */ 'text';
         builder.Prompts[promptType](
           session, 
-          currentNode.data.text, 
-          currentNode.data.options, 
+          (<n.PromptNode>currentNode).text(), 
+          {} /*currentNode.data.options */, 
           { 
-            listStyle: currentNode.data.config && currentNode.data.config.listStyle && builder.ListStyle[currentNode.data.config.listStyle] || builder.ListStyle.button 
+            listStyle: /*currentNode.data.config && currentNode.data.config.listStyle && builder.ListStyle[currentNode.data.config.listStyle] || */
+            builder.ListStyle.button 
           });
         break;
-        
+        /*
       case NodeType.score:
         var botModels = currentNode.data.models.map(model => this.nav.models.get(model));
         
@@ -149,16 +164,17 @@ export class Navigator implements INavigator {
 
   private stepResultCollectionHandler(session: builder.Session, results, next) {
     let currentNode = this.getCurrentNode(session);
-    let varname = currentNode.varname();
+    let varname = <string>currentNode.varname();
     
     if (!(results.response && varname)) 
 			return next();
 
       
-    switch (currentNode.type) {
+    switch (currentNode.type()) {
 
-      /*
-      case NodeType.prompt:
+      case n.NodeTypes.prompt:
+
+    /*
 				// TODO switch to enum
         switch (currentNode.data.type) {
           case 'time':
@@ -172,6 +188,7 @@ export class Navigator implements INavigator {
         }
         break;
         */
+        
       default: 
         session.dialogData[varname] = results.response;
     }

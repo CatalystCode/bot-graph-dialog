@@ -33,6 +33,12 @@ export class Builder {
     return newNode;
   }
 
+  public promptNode(id?: string, options: n.ITextNodeOptions = {}) : n.PromptNode {
+    let newNode = new n.PromptNode(this, id);
+    this.updateMembers(newNode);
+    return newNode;
+  }
+
   public root(): n.INode {
     return this._root;
   }
@@ -46,11 +52,9 @@ export class Builder {
       this._root = node;
       this._nav = new nv.Navigator(node);
     }
-    else {
-      // navigator exists, ad node
-      this._nav.addNode(node);
-    }
-
+    // navigator exists, add node
+    this._nav.addNode(node);
+  
     if (this._curr) {
       this._curr.next(node);
       node.prev(this._curr);

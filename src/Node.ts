@@ -3,20 +3,20 @@ import { List } from './Common';
 import s = require('./Scenario');
 import { Builder } from './Builder';
 
-export enum NodeType {
-	text,
-	prompt,
-	score,
-	handler,
-	sequence,
-	end
+export const NodeTypes = {
+	text: 'text',
+	prompt: 'prompt',
+	score: 'score',
+	handler: 'handler',
+	sequence: 'sequence',
+	end: 'end'
 }
 
 
 export interface INode {
 		//constructor(node: Node, type: string | NodeType);
     
-		varname(varname?: string): string;
+		varname(varname?: string): INode | string;
 	
 		body: any,
 		data: any,
@@ -26,7 +26,7 @@ export interface INode {
 
 		steps?: List<INode>,
 		scenarios?: List<s.IScenario>,
-		type() : NodeType
+		type() : string
 		id(id?: string): string
 }
 
@@ -39,7 +39,7 @@ export abstract class Node implements INode {
 
 	private _id: string;
 	private _varname: string;
-	private _type: NodeType;
+	private _type: string;
 	public body: any;
 	public data: any;
 	public steps: List<INode>;
@@ -51,7 +51,7 @@ export abstract class Node implements INode {
 
 	protected _builder: Builder;
 
- 	constructor(builder: Builder, type: NodeType, id? : string) {
+ 	constructor(builder: Builder, type: string, id? : string) {
 		
 		 if (!(builder instanceof Builder)) {
 			 throw new Error('Builder was not provided');
@@ -59,7 +59,7 @@ export abstract class Node implements INode {
 		 this._builder = builder;
 
 		// TODO: check instance type
-		if (typeof type !== 'number') {
+		if (typeof type !== 'string') {
 			throw new Error('Please provide node type');	
 		}
 
@@ -71,7 +71,7 @@ export abstract class Node implements INode {
 		else {
 			this._id = (typeof this) + '_' + (Node.idCount ++);
 		}
-		console.log(`Node id ${this.id} of type ${typeof this} instantiated`);
+		console.log(`Node id ${this._id} of type ${typeof this} instantiated`);
 
 
 		/*
@@ -95,7 +95,7 @@ export abstract class Node implements INode {
 		return this._id;
 	}
 
-	public type() : NodeType {
+	public type() : string {
 		return this._type;
 	}
 
@@ -119,9 +119,10 @@ export abstract class Node implements INode {
 		return this._builder;
 	}
 
-	public varname(varname?: string): string {
+	public varname(varname?: string): INode | string {
 		if (typeof varname === 'string') {
 			this._varname = varname;
+			return this;
 		}
 		return this._varname;
 	}
@@ -137,11 +138,31 @@ export class TextNode extends Node {
 	private _text: string = ''
 	
 	constructor(builder: Builder, private options: ITextNodeOptions = {}) {
-		super(builder, NodeType.text, options.id);
+		super(builder, NodeTypes.text, options.id);
 		this.text(options.text);
 	}
 
 	public text(text?: string) : TextNode | string {
+		if (typeof text === 'string') {
+			this._text = text;
+			return this;
+		}
+
+		return this._text;
+	}
+
+}
+
+export class PromptNode extends Node {
+	
+	private _text: string = ''
+	
+	constructor(builder: Builder, private options: ITextNodeOptions = {}) {
+		super(builder, NodeTypes.prompt, options.id);
+		this.text(options.text);
+	}
+
+	public text(text?: string) : PromptNode | string {
 		if (typeof text === 'string') {
 			this._text = text;
 			return this;
