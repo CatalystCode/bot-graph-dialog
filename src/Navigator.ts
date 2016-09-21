@@ -1,3 +1,32 @@
+
+
+import builder = require('botbuilder');
+import n = require('./Node');
+
+
+export interface INavigator {
+  getNext(session: builder.Session): builder.IGraphStep
+}
+
+export class Navigator implements INavigator {
+
+  private curr: n.INode = null;
+
+  constructor(private root: n.INode) {
+    if (!root) {
+      throw new Error('root node was not provided');
+    }
+    this.curr = root;
+	}
+
+  public getNext(session: builder.Session): builder.IGraphStep {
+    return (session: builder.Session, result?: any | builder.IDialogResult<any>, skip?: (results?: builder.IDialogResult<any>) => void): any => {
+      
+    };
+  }
+}
+
+/*
 import { Node } from './Node';
 import { Scenario } from './Scenario';
 import { ConditionHandler } from './ConditionHandler';
@@ -7,6 +36,7 @@ import { Parser } from './Parser';
 import builder = require('botbuilder');
 import path = require('path');
 import interfaces = require('./Interfaces');
+
 
 var extend = require('extend');
 var strformat = require('strformat');
@@ -73,3 +103,4 @@ export class Navigator {
   }
 
 }
+*/

@@ -1,3 +1,4 @@
+/*
 import { Node } from './Node';
 import { Scenario } from './Scenario';
 import { ConditionHandler } from './ConditionHandler';
@@ -8,6 +9,7 @@ import builder = require('botbuilder');
 import path = require('path');
 import interfaces = require('./Interfaces');
 
+/*
 var extend = require('extend');
 var strformat = require('strformat');
 let NodeType = interfaces.NodeType;
@@ -151,8 +153,11 @@ export class Parser {
   }
 
 	private updateModels(models: any[]): void {
-      (models || []).forEach(model => { 
-				this.models.add(model.name, new LuisModel(model.name, model.url));
-			});
+    (models || []).forEach(model => { 
+      this.models.add(model.name, new LuisModel(model.name, model.url));
+    });
 	}
 }
+
+
+*/

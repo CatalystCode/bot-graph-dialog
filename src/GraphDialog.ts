@@ -1,4 +1,4 @@
-
+/*
 import { Parser } from './Parser';
 import { Navigator } from './Navigator';
 import { IntentScorer } from './IntentScorer';
@@ -7,6 +7,8 @@ import builder = require('botbuilder');
 import path = require('path');
 
 var strformat = require('strformat');
+
+
 
 
 let NodeType = interfaces.NodeType;
@@ -28,31 +30,12 @@ export class GraphDialog {
 	}
 
 
-/*
-	// TODO cancel using the c'tor
-	public static fromJson(filePath: string, options: IGraphDialogOptions) {
-		// require file
-		var json = {};//
-		return new GraphDialog(options);
-	}
-*/
 	public getSteps(): any[] {
 		console.log('get steps');
 
 		var steps = [];
 
-	/*
-		// temporary- clear session every time we start
-		function clearSession(session, results, next) {
-			if (session.dialogData._currentNodeId) { 
-				console.info('clearing session');
-				session.reset();
-			}
-			return next();
-		}
-	
-		steps.push(clearSession);
-	*/
+
 
 		for (var i=0; i<this.options.steps; i++) {
 			steps.push((session: builder.Session, results, next) => this.stepInteractionHandler(session, results, next));
@@ -179,3 +162,4 @@ export class GraphDialog {
     return next();
   }
 }
+*/

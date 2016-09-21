@@ -1,4 +1,4 @@
-
+/*
 
 import { LuisModel } from './Luis';
 import interfaces = require('./Interfaces');
@@ -50,3 +50,4 @@ export class IntentScorer implements interfaces.IIntentScorer {
 
 }
 
+*/

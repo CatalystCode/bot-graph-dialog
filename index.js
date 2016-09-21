@@ -1,2 +1,2 @@
 
-module.exports = require('./lib/GraphDialog');
+module.exports = require('./lib/Builder');
