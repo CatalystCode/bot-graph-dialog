@@ -15,8 +15,8 @@ export enum NodeType {
 
 export interface INode {
 		//constructor(node: Node, type: string | NodeType);
-    id: string;
-		varname?: string;
+    
+		varname(varname?: string): string;
 	
 		body: any,
 		data: any,
@@ -27,6 +27,7 @@ export interface INode {
 		steps?: List<INode>,
 		scenarios?: List<s.IScenario>,
 		type() : NodeType
+		id(id?: string): string
 }
 
 
@@ -36,8 +37,8 @@ export abstract class Node implements INode {
 
 	private static idCount = 1;
 
-	public id: string;
-	public varname: string;
+	private _id: string;
+	private _varname: string;
 	private _type: NodeType;
 	public body: any;
 	public data: any;
@@ -65,10 +66,10 @@ export abstract class Node implements INode {
 		this._type = type;
 
 		if (typeof id === 'string') {
-			this.id = id;
+			this._id = id;
 		}
 		else {
-			this.id = (typeof this) + '_' + (Node.idCount ++);
+			this._id = (typeof this) + '_' + (Node.idCount ++);
 		}
 		console.log(`Node id ${this.id} of type ${typeof this} instantiated`);
 
@@ -89,6 +90,9 @@ export abstract class Node implements INode {
 		this.body = node;
 		this.data = node.data;
 		*/
+	}
+	public id(): string {
+		return this._id;
 	}
 
 	public type() : NodeType {
@@ -113,6 +117,13 @@ export abstract class Node implements INode {
 
 	public end(): Builder {
 		return this._builder;
+	}
+
+	public varname(varname?: string): string {
+		if (typeof varname === 'string') {
+			this._varname = varname;
+		}
+		return this._varname;
 	}
 }
 

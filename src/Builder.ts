@@ -20,7 +20,7 @@ export class Builder {
 
   private _root: n.INode = null;
   private _curr: n.INode = null;
-  private _nav: nv.INavigator = null;
+  private _nav: nv.Navigator = null;
 
 	constructor() {
 	
@@ -45,6 +45,10 @@ export class Builder {
     if (!this._root) {
       this._root = node;
       this._nav = new nv.Navigator(node);
+    }
+    else {
+      // navigator exists, ad node
+      this._nav.addNode(node);
     }
 
     if (this._curr) {
