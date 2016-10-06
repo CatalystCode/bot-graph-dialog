@@ -31,18 +31,16 @@ export interface IScenario {
 }
 
 export interface IParserOptions {
-	scenario: string;
-	scenariosPath?: string;
-	handlersPath?: string;
-	loadJson?(name: string): Promise<any>;
+	scenario?: string;
+	loadScenario?(name: string): Promise<any>;
+	loadHandler?(name: string): Promise<string>;
 } 
 
-export interface INavigatorOptions {
+export interface INavigatorOptions extends IParserOptions {
 	
 } 
 
 export interface IGraphDialogOptions extends INavigatorOptions { 
-	parser?: IParserOptions;
 	steps?: number;
 }
 

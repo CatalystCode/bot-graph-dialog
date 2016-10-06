@@ -24,41 +24,27 @@ export class GraphDialog {
     this.intentScorer = new IntentScorer();
 	}
 
-  public init(): Promise<any> {
+  public init(): Promise<GraphDialog> {
     return new Promise((resolve, reject) => {
-      let parser = new Parser(this.options.parser);
+      let parser = new Parser(this.options);
       parser.init().then(() => {
         console.log('parser is ready');
         this.nav = new Navigator(parser);
-        return resolve();
+        return resolve(this);
       }).catch(e => reject(e));
     });
   }
 
-/*
-	// TODO cancel using the c'tor
-	public static fromJson(filePath: string, options: IGraphDialogOptions) {
-		// require file
-		var json = {};//
-		return new GraphDialog(options);
+	public static fromScenario(options: interfaces.IGraphDialogOptions = {}): Promise<GraphDialog> {
+		let gd = new GraphDialog(options);
+    return gd.init();
 	}
-*/
+
 	public getSteps(): any[] {
 		console.log('get steps');
 
 		var steps = [];
 
-	
-		// temporary- clear session every time we start
-		function clearSession(session, results, next) {
-			if (session.dialogData._currentNodeId) { 
-				console.info('clearing session');
-				session.reset();
-			}
-			return next();
-		}
-	
-		//steps.push(clearSession);
 	
 		for (var i=0; i<this.options.steps; i++) {
 			steps.push((session: builder.Session, results, next) => this.stepInteractionHandler(session, results, next));
@@ -117,8 +103,7 @@ export class GraphDialog {
 
       case NodeType.handler:
         var handlerName = currentNode.data.name;
-        var handlerPath = path.join(this.options.parser.handlersPath, handlerName)
-        var handler = require(handlerPath);
+        var handler = this.nav.handlers.get(handlerName);
         console.log('calling handler: ', currentNode.id, handlerName);
         return handler(session, next, currentNode.data);
     

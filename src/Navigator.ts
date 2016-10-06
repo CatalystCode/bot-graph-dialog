@@ -16,11 +16,14 @@ let NodeType = interfaces.NodeType;
 // TODO implement using interface H&E
 export class Navigator {
 
-  public models = new Map<interfaces.ILuisModel>();
+  public models: Map<interfaces.ILuisModel>;
+  public handlers: Map<any>;
+
 
 	constructor(private parser: Parser, private options: interfaces.INavigatorOptions = {}) {
     // TODO: remove models. point nodes to Model object instead of keeping a map for models.
     this.models = parser.models;
+    this.handlers = parser.handlers;
 	}
 
   public getCurrentNode(session: builder.Session): interfaces.INode {
