@@ -15,18 +15,25 @@ export class GraphDialog {
 
 	private nav: Navigator;
   private intentScorer: interfaces.IIntentScorer;
-	
+	private done: () => any;
 
 	constructor(private options: interfaces.IGraphDialogOptions = {}) {
 		if (typeof this.options.steps !== 'number') {
-      this.options.steps = 100;
+      this.options.steps = 1000;
     }
-    
-    let parser = new Parser(options.parser);
-    this.nav = new Navigator(parser);
     this.intentScorer = new IntentScorer();
 	}
 
+  public init(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      let parser = new Parser(this.options.parser);
+      parser.init().then(() => {
+        console.log('parser is ready');
+        this.nav = new Navigator(parser);
+        return resolve();
+      }).catch(e => reject(e));
+    });
+  }
 
 /*
 	// TODO cancel using the c'tor
@@ -41,7 +48,7 @@ export class GraphDialog {
 
 		var steps = [];
 
-	/*
+	
 		// temporary- clear session every time we start
 		function clearSession(session, results, next) {
 			if (session.dialogData._currentNodeId) { 
@@ -51,9 +58,8 @@ export class GraphDialog {
 			return next();
 		}
 	
-		steps.push(clearSession);
-	*/
-
+		//steps.push(clearSession);
+	
 		for (var i=0; i<this.options.steps; i++) {
 			steps.push((session: builder.Session, results, next) => this.stepInteractionHandler(session, results, next));
       steps.push((session: builder.Session, results, next) => this.stepResultCollectionHandler(session, results, next));
@@ -169,6 +175,9 @@ export class GraphDialog {
 
     if (nextNode) {
       console.log(`step handler node: ${nextNode.id}`);
+
+      // workaround to go back to the first step of processing the next node
+      //session.dialogData['BotBuilder.Data.WaterfallStep'] = 0;
     }
     else {
 				console.log('ending dialog');

@@ -34,6 +34,7 @@ export interface IParserOptions {
 	scenario: string;
 	scenariosPath?: string;
 	handlersPath?: string;
+	loadJson?(name: string): Promise<any>;
 } 
 
 export interface INavigatorOptions {
@@ -42,15 +43,12 @@ export interface INavigatorOptions {
 
 export interface IGraphDialogOptions extends INavigatorOptions { 
 	parser?: IParserOptions;
-	steps?: number
+	steps?: number;
 }
-
 
 export interface IIntentScorer {
   collectIntents(models: ILuisModel[], text: string, threashold: number): Promise<IIntentScore[]>;
 }
-
-
 
 
 export interface ILuisModel {

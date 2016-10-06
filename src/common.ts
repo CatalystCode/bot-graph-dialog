@@ -56,7 +56,6 @@ export class Map<T> {
         return this.items[key];
     }
 
-    /*
     keys() : string[] {
         return Object.keys(this.items);
     }
@@ -64,6 +63,6 @@ export class Map<T> {
     values(): T[] {
         return Object.keys(this.items).map(key => this.items[key]);
     }
-    */
+    
 }
 
