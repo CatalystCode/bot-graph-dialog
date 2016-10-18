@@ -1,51 +1,79 @@
 
 import { Parser } from './Parser';
-import { Navigator } from './Navigator';
-import { IntentScorer } from './IntentScorer';
-import interfaces = require('./Interfaces');
+import nav = require('./Navigator');
+import n = require('./Node');
+import i = require('./IntentScorer');
+import a = require('./Action');
+import { Map, List } from './Common';
 import builder = require('botbuilder');
 import path = require('path');
 
 var strformat = require('strformat');
 
+let NodeType = n.NodeType;
 
-let NodeType = interfaces.NodeType;
+export interface IGraphDialogOptions extends nav.INavigatorOptions { 
+	steps?: number;
+  customTypeHandlers?: a.ICustomNodeTypeHandler[]
+}
 
-export class GraphDialog {
+export interface IHandler {
+    (session: builder.Session, results, next): void
+}
 
-	private nav: Navigator;
-  private intentScorer: interfaces.IIntentScorer;
+interface IStepFunction {
+  (session: builder.Session, results, next): void;
+}
+
+export interface IGraphDialog {
+    init(): Promise<IGraphDialog>;
+    getSteps(): IStepFunction[];
+    //static fromScenario(options: IGraphDialogOptions): Promise<IGraphDialog>
+}
+
+
+export class GraphDialog implements IGraphDialog {
+
+	private nav: nav.Navigator;
+  private intentScorer: i.IIntentScorer;
 	private done: () => any;
+  private customTypeHandlers: Map<a.ICustomNodeTypeHandler>;
 
-	constructor(private options: interfaces.IGraphDialogOptions = {}) {
+	constructor(private options: IGraphDialogOptions = {}) {
 		if (typeof this.options.steps !== 'number') {
       this.options.steps = 1000;
     }
-    this.intentScorer = new IntentScorer();
+    this.intentScorer = new i.IntentScorer();
+
+    options.customTypeHandlers = options.customTypeHandlers || new Array<a.ICustomNodeTypeHandler>();
+    this.customTypeHandlers = new Map<a.CustomNodeTypeHandler>();
+    for (let i=0; i<options.customTypeHandlers.length; i++) {
+      let handler = <a.ICustomNodeTypeHandler>options.customTypeHandlers[i];
+      this.customTypeHandlers.add(handler.name, handler);
+    }
 	}
 
-  public init(): Promise<GraphDialog> {
+  public init(): Promise<IGraphDialog> {
     return new Promise((resolve, reject) => {
       let parser = new Parser(this.options);
       parser.init().then(() => {
         console.log('parser is ready');
-        this.nav = new Navigator(parser);
+        this.nav = new nav.Navigator(parser);
         return resolve(this);
       }).catch(e => reject(e));
     });
   }
 
-	public static fromScenario(options: interfaces.IGraphDialogOptions = {}): Promise<GraphDialog> {
+	public static fromScenario(options: IGraphDialogOptions = {}): Promise<GraphDialog> {
 		let gd = new GraphDialog(options);
     return gd.init();
 	}
 
-	public getSteps(): any[] {
+	public getSteps(): IStepFunction[] {
 		console.log('get steps');
 
-		var steps = [];
+		let steps: IStepFunction[] = new Array<IStepFunction>();
 
-	
 		for (var i=0; i<this.options.steps; i++) {
 			steps.push((session: builder.Session, results, next) => this.stepInteractionHandler(session, results, next));
       steps.push((session: builder.Session, results, next) => this.stepResultCollectionHandler(session, results, next));
@@ -103,9 +131,10 @@ export class GraphDialog {
 
       case NodeType.handler:
         var handlerName = currentNode.data.name;
-        var handler = this.nav.handlers.get(handlerName);
+        let handler: IHandler = <IHandler>this.nav.handlers.get(handlerName);
         console.log('calling handler: ', currentNode.id, handlerName);
-        return handler(session, next, currentNode.data);
+        handler(session, next, currentNode.data);
+        break;
     
       case NodeType.sequence:
         return next();
@@ -117,6 +146,13 @@ export class GraphDialog {
         break;
 
       default:
+
+        let customHandler: a.ICustomNodeTypeHandler = this.customTypeHandlers.get(currentNode.typeName);
+        if (customHandler) {
+          console.log(`invoking custom node type handler: ${currentNode.typeName}`);
+          return customHandler.execute(session, next, currentNode.data);
+        }
+
         var msg = 'Node type ' + currentNode.type + ' is not recognized';
         console.error(msg);
         var error = new Error(msg);

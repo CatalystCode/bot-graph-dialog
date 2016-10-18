@@ -1,37 +1,59 @@
 import { List } from './Common';
-import interfaces = require('./Interfaces');
+import s = require('./Scenario');
 
-export class Node implements interfaces.INode {
+export enum NodeType {
+	text,
+	prompt,
+	score,
+	handler,
+	sequence,
+	end
+}
+
+export interface INode {
+		//constructor(node: Node, type: string | NodeType);
+    id: string;
+		varname?: string;
+		type: NodeType;
+		typeName: string;
+		body: any,
+		data: any,
+		parent?: INode,
+		prev?: INode,
+		next?: INode,
+		steps?: List<INode>,
+		scenarios?: List<s.IScenario>
+}
+
+export class Node implements INode {
 
 	private tree: any[];
 
 	public id: string;
 	public varname: string;
-	public type: interfaces.NodeType;
+	public type: NodeType;
+	public typeName: string;
 	public body: any;
 	public data: any;
-	public steps: List<interfaces.INode>;
-	public scenarios: List<interfaces.IScenario>;
-	public parent: interfaces.INode;
-	public prev: interfaces.INode;
-	public next: interfaces.INode;
+	public steps: List<INode>;
+	public scenarios: List<s.IScenario>;
+	public parent: INode;
+	public prev: INode;
+	public next: INode;
 
-	constructor(node: interfaces.INode, type: string | interfaces.NodeType) {
+	constructor(node: INode, type: string | NodeType) {
 		
 		this.id = node.id;
-		if (typeof type === 'string')
-			this.type = interfaces.NodeType[type];
+		if (typeof type === 'string') {
+			this.type = NodeType[type];
+			this.typeName = type;
+		}
 		else
-			this.type = <interfaces.NodeType>type;
-
-		/*
-		delete node.id;
-		delete node.type;
-*/
+			this.type = <NodeType>type;
 
 		this.varname = node.varname || this.id;
-		this.steps = new List<interfaces.INode>();
-		this.scenarios = new List<interfaces.IScenario>();
+		this.steps = new List<INode>();
+		this.scenarios = new List<s.IScenario>();
 
 		this.body = node;
 		this.data = node.data;

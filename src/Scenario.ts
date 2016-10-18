@@ -1,16 +1,22 @@
 
 import { List } from './Common';
-import interfaces = require('./Interfaces');
+import n = require('./Node');
 
-export class Scenario implements interfaces.IScenario {
+export interface IScenario {
+    condition: string;
+		steps?: List<n.INode>;
+		node: n.INode;
+}
+
+export class Scenario implements IScenario {
 
 	public condition: string;	
-	public steps: List<interfaces.INode>;
-	public node: interfaces.INode;
+	public steps: List<n.INode>;
+	public node: n.INode;
 
-	constructor(condition: string, node: interfaces.INode = null) {
+	constructor(condition: string, node: n.INode = null) {
 		this.condition = condition;
 		this.node = node;
-		this.steps = new List<interfaces.INode>()
+		this.steps = new List<n.INode>()
 	}
 }

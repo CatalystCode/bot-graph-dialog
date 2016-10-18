@@ -1,15 +1,17 @@
 
 
-import { LuisModel } from './Luis';
-import interfaces = require('./Interfaces');
+import l = require('./Luis');
 var request = require('request-promise');
 var Promise = require('promise');
 var _ = require('underscore');
 
+export interface IIntentScorer {
+  collectIntents(models: l.ILuisModel[], text: string, threashold: number): Promise<l.IIntentScore[]>;
+}
 
-export class IntentScorer implements interfaces.IIntentScorer {
+export class IntentScorer implements IIntentScorer {
 
-	 public collectIntents(models: interfaces.ILuisModel[], text: string, threashold: number = 0): Promise<interfaces.IIntentScore[]> {
+	 public collectIntents(models: l.ILuisModel[], text: string, threashold: number = 0): Promise<l.IIntentScore[]> {
 
 			let promises: Promise<any>[] = models.map(model => {
 				return this.scoreIntent(model, text, threashold);
@@ -29,7 +31,7 @@ export class IntentScorer implements interfaces.IIntentScorer {
 			});  
 	 }
 
-	 private scoreIntent(model: interfaces.ILuisModel, text: string, threashold: number = 0): Promise<interfaces.IIntentScore> {
+	 private scoreIntent(model: l.ILuisModel, text: string, threashold: number = 0): Promise<l.IIntentScore> {
 		 return new Promise(function (resolve, reject) {
 			 return request(model.url + encodeURIComponent(text))
 				.then(result => {
@@ -42,7 +44,7 @@ export class IntentScorer implements interfaces.IIntentScorer {
 					let intent = json.intents[0];
 					intent.model = model.name;
 
-					return resolve(<interfaces.IIntentScore>intent);
+					return resolve(<l.IIntentScore>intent);
 				})
 				.catch(reject);
 		});
