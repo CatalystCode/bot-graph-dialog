@@ -84,9 +84,9 @@ export class GraphDialog implements IGraphDialog {
 	}
 
   private setBotDialog(): void {
-    var self = this;
+
     this.options.bot.dialog('/' + this.loopDialogName, [
-      function (session, results, next) { 
+      (session, results, next) => { 
           if (results && results._dialogDataFlag) {
             // restore dialogData state from previous last step
             let obj:any = {};
@@ -95,18 +95,18 @@ export class GraphDialog implements IGraphDialog {
             delete obj['BotBuilder.Data.WaterfallStep'];
             extend(true, session.dialogData, obj);                    
         }
-        return self.stepInteractionHandler(session, results, next); 
+        return this.stepInteractionHandler(session, results, next); 
       },
-      function (session, results, next) { 
-        return self.stepResultCollectionHandler(session, results, next); 
+      (session, results, next) => { 
+        return this.stepResultCollectionHandler(session, results, next); 
       },
-      function (session, results, next) { 
-        return self.setNextStepHandler(session, results, next); 
+      (session, results, next) => { 
+        return this.setNextStepHandler(session, results, next); 
       },
-      function (session, results, next) {
+      (session, results, next) => {
         console.log('calling loop function');
         session.dialogData._dialogDataFlag = true;
-        session.replaceDialog('/' + self.loopDialogName, session.dialogData);
+        session.replaceDialog('/' + this.loopDialogName, session.dialogData);
       }
     ]);
   }
