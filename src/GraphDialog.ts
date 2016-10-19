@@ -37,6 +37,9 @@ export interface IGraphDialog {
 export class GraphDialog implements IGraphDialog {
 
 	private nav: nav.Navigator;
+  private navKey: string;
+  private navMap: Map<nav.Navigator> = new Map<nav.Navigator>();
+
   private intentScorer: i.IIntentScorer;
 	private done: () => any;
   private customTypeHandlers: Map<a.ICustomNodeTypeHandler>;
@@ -45,7 +48,7 @@ export class GraphDialog implements IGraphDialog {
 
 	constructor(private options: IGraphDialogOptions = {}) {
 		if (!options.bot) throw new Error('please provide the bot object');
-    // TODO add GUID
+
     this.loopDialogName += options.scenario + uuid.v4();
     this.setBotDialog();
     
@@ -60,13 +63,23 @@ export class GraphDialog implements IGraphDialog {
 	}
 
   public init(): Promise<IGraphDialog> {
-    return new Promise((resolve, reject) => {
+    return new Promise<IGraphDialog>((resolve, reject) => {
       let parser = new Parser(this.options);
       parser.init().then(() => {
         console.log('parser is ready');
         this.nav = new nav.Navigator(parser);
+        this.navKey = uuid.v4();
+        this.navMap.add(this.navKey, this.nav);
         return resolve(this);
       }).catch(e => reject(e));
+    });
+  }
+
+  public reload(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      return this.init()
+        .then(() => resolve())
+        .catch(err => reject(err));
     });
   }
 
@@ -79,9 +92,19 @@ export class GraphDialog implements IGraphDialog {
 		console.log('get dialog');
     return (session: builder.Session, results, next) => {
         console.log('calling loop function for the first time');
+        
+        // assign the navigator Id for the user
+        session.dialogData._navId = this.navKey;
         session.replaceDialog('/' + this.loopDialogName);
     };
 	}
+
+  private getNavigator(session: builder.Session): nav.Navigator {
+    var navId = session.dialogData._navId;
+    if (navId && this.navMap.has(navId))
+      return this.navMap.get(navId);
+    return this.nav;
+  }
 
   private setBotDialog(): void {
 
@@ -114,7 +137,7 @@ export class GraphDialog implements IGraphDialog {
   // TODO: add option for 'bot is typeing' message before sending the answer
   private stepInteractionHandler(session: builder.Session, results, next): void {
     session.dialogData._lastMessage = session.message && session.message.text;
-    let currentNode = this.nav.getCurrentNode(session);
+    let currentNode = this.getNavigator(session).getCurrentNode(session);
     console.log(`perform action: ${currentNode.id}, ${currentNode.type}`);
 
     switch (currentNode.type) {
@@ -138,7 +161,7 @@ export class GraphDialog implements IGraphDialog {
         break;
         
       case NodeType.score:
-        var botModels = currentNode.data.models.map(model => this.nav.models.get(model));
+        var botModels = currentNode.data.models.map(model => this.getNavigator(session).models.get(model));
         
         var text = session.dialogData[currentNode.data.source] || session.dialogData._lastMessage;
         console.log(`LUIS scoring for node: ${currentNode.id}, text: \'${text}\' LUIS models: ${botModels}`);
@@ -158,7 +181,7 @@ export class GraphDialog implements IGraphDialog {
 
       case NodeType.handler:
         var handlerName = currentNode.data.name;
-        let handler: IHandler = <IHandler>this.nav.handlers.get(handlerName);
+        let handler: IHandler = <IHandler>this.getNavigator(session).handlers.get(handlerName);
         console.log('calling handler: ', currentNode.id, handlerName);
         handler(session, next, currentNode.data);
         break;
@@ -189,7 +212,7 @@ export class GraphDialog implements IGraphDialog {
   }
 
   private stepResultCollectionHandler(session: builder.Session, results, next) {
-    let currentNode = this.nav.getCurrentNode(session);
+    let currentNode = this.getNavigator(session).getCurrentNode(session);
     let varname = currentNode.varname;
     
     if (!(results.response && varname)) 
@@ -219,7 +242,7 @@ export class GraphDialog implements IGraphDialog {
   }
 
   private setNextStepHandler(session: builder.Session, args, next): any {
-    let nextNode = this.nav.getNextNode(session);
+    let nextNode = this.getNavigator(session).getNextNode(session);
 
     if (nextNode) {
       console.log(`step handler node: ${nextNode.id}`);
