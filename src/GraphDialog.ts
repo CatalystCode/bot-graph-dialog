@@ -8,12 +8,14 @@ import { Map, List } from './Common';
 import builder = require('botbuilder');
 import path = require('path');
 
+var extend = require('extend');
 var strformat = require('strformat');
+var uuid = require('uuid');
 
 let NodeType = n.NodeType;
 
 export interface IGraphDialogOptions extends nav.INavigatorOptions { 
-	steps?: number;
+	bot?: builder.UniversalBot;
   customTypeHandlers?: a.ICustomNodeTypeHandler[]
 }
 
@@ -27,7 +29,7 @@ interface IStepFunction {
 
 export interface IGraphDialog {
     init(): Promise<IGraphDialog>;
-    getSteps(): IStepFunction[];
+    getDialog(): IStepFunction;
     //static fromScenario(options: IGraphDialogOptions): Promise<IGraphDialog>
 }
 
@@ -39,10 +41,14 @@ export class GraphDialog implements IGraphDialog {
 	private done: () => any;
   private customTypeHandlers: Map<a.ICustomNodeTypeHandler>;
 
+  private loopDialogName: string = '__internalLoop';
+
 	constructor(private options: IGraphDialogOptions = {}) {
-		if (typeof this.options.steps !== 'number') {
-      this.options.steps = 1000;
-    }
+		if (!options.bot) throw new Error('please provide the bot object');
+    // TODO add GUID
+    this.loopDialogName += options.scenario + uuid.v4();
+    this.setBotDialog();
+    
     this.intentScorer = new i.IntentScorer();
 
     options.customTypeHandlers = options.customTypeHandlers || new Array<a.ICustomNodeTypeHandler>();
@@ -64,25 +70,46 @@ export class GraphDialog implements IGraphDialog {
     });
   }
 
-	public static fromScenario(options: IGraphDialogOptions = {}): Promise<GraphDialog> {
+	public static fromScenario(options: IGraphDialogOptions = {}): Promise<IGraphDialog> {
 		let gd = new GraphDialog(options);
     return gd.init();
 	}
 
-	public getSteps(): IStepFunction[] {
-		console.log('get steps');
-
-		let steps: IStepFunction[] = new Array<IStepFunction>();
-
-		for (var i=0; i<this.options.steps; i++) {
-			steps.push((session: builder.Session, results, next) => this.stepInteractionHandler(session, results, next));
-      steps.push((session: builder.Session, results, next) => this.stepResultCollectionHandler(session, results, next));
-      steps.push((session: builder.Session, results, next) => this.setNextStepHandler(session, results, next));
-		}
-
-		return steps;
+	public getDialog(): IStepFunction {
+		console.log('get dialog');
+    return (session: builder.Session, results, next) => {
+        console.log('calling loop function for the first time');
+        session.replaceDialog('/' + this.loopDialogName);
+    };
 	}
 
+  private setBotDialog(): void {
+    var self = this;
+    this.options.bot.dialog('/' + this.loopDialogName, [
+      function (session, results, next) { 
+          if (results && results._dialogDataFlag) {
+            // restore dialogData state from previous last step
+            let obj:any = {};
+            extend(true, obj, results);
+            delete obj._dialogDataFlag;
+            delete obj['BotBuilder.Data.WaterfallStep'];
+            extend(true, session.dialogData, obj);                    
+        }
+        return self.stepInteractionHandler(session, results, next); 
+      },
+      function (session, results, next) { 
+        return self.stepResultCollectionHandler(session, results, next); 
+      },
+      function (session, results, next) { 
+        return self.setNextStepHandler(session, results, next); 
+      },
+      function (session, results, next) {
+        console.log('calling loop function');
+        session.dialogData._dialogDataFlag = true;
+        session.replaceDialog('/' + self.loopDialogName, session.dialogData);
+      }
+    ]);
+  }
 
   // TODO: add option for 'bot is typeing' message before sending the answer
   private stepInteractionHandler(session: builder.Session, results, next): void {
