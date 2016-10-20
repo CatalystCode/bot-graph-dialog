@@ -67,3 +67,17 @@ export class Map<T> {
     */
 }
 
+export function setIf<T1 extends { data?: any }, T2>(_this: T1, prop: string, value: T2) : T1 | T2{
+
+  // In case searching in data property
+  if (prop && prop.indexOf('data.') === 0) {
+    _this = _this.data;
+    prop = prop.substr('data.'.length);
+  }
+
+  if (typeof value !== 'undefined') {
+    _this[prop] = value;
+    return _this;
+  }
+  return _this[prop];
+} 

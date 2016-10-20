@@ -1,4 +1,4 @@
-import { List } from './Common';
+import { List, setIf } from './Common';
 
 import s = require('./Scenario');
 import { Builder } from './Builder';
@@ -52,7 +52,7 @@ export abstract class Node implements INode {
 	protected _builder: Builder;
 
  	constructor(builder: Builder, type: string, id? : string) {
-		
+
 		 if (!(builder instanceof Builder)) {
 			 throw new Error('Builder was not provided');
 		 }
@@ -142,12 +142,11 @@ export class TextNode extends Node {
 		this.text(options.text);
 	}
 
-	public text(text?: string) : TextNode | string {
-		if (typeof text === 'string') {
+	public text(text: string = null) : TextNode | string {
+		if (text != null) {
 			this._text = text;
-			return this;
+			return this as TextNode;
 		}
-
 		return this._text;
 	}
 
@@ -172,4 +171,16 @@ export class PromptNode extends Node {
 	}
 
 
+}
+
+export class ScoreNode extends Node {
+	
+	constructor(builder: Builder, private options: ITextNodeOptions = {}) {
+		super(builder, NodeTypes.score, options.id);
+		this.data = {
+			models: []
+		};
+	}
+
+	public models(models: string | string[]) : any { return setIf<ScoreNode, string[]>(this, 'data._models', typeof models === 'string' ? [ models ] : models);	}
 }
