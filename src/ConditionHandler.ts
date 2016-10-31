@@ -1,44 +1,53 @@
+import { Expression, IBinaryExpression, IIdentifier, ILiteral, IMemberExpression, IUnaryExpression } from './jsep';
+
 var jsep = require('jsep');
 
-export class ConditionHandler {
+/**
+ * Parsing and calculating conditional expressions from strings
+ * i.e.: age >= 30 & (age * 2) < 40
+ */
+export module ConditionHandler {
 
-	constructor() {
-		console.log('ConditionerHandler intantiated');
-	}
-
-	// todo: change interface to {}, string and code accordingly
-	public static evaluateExpression(object: any, expression: any): any {
-		var exp = expression;
-		if (typeof exp == 'string') {
-			exp = jsep(exp);
+	// Recursively perform an evaluation of an expression
+	export function evaluateExpression(object: any, expression: string | Expression): any {
+		var exp: Expression = null;
+		if (typeof expression == 'string') {
+			exp = new jsep(expression);
+		} else {
+			exp = expression;
 		}
 
+		// Analyze the expression according to its type
 		switch (exp.type) {
 			case 'BinaryExpression':
-				var value1 = this.evaluateExpression(object, exp.left);
-				var value2 = this.evaluateExpression(object, exp.right);
-				return this.calculateExpression(exp.operator, value1, value2);
+				var bexp = exp as IBinaryExpression;
+				var value1 = this.evaluateExpression(object, bexp.left);
+				var value2 = this.evaluateExpression(object, bexp.right);
+				return this.calculateExpression(bexp.operator, value1, value2);
 
 			case 'UnaryExpression':
-				var value = this.evaluateExpression(object, exp.argument);
-				return this.calculateExpression(exp.operator, value, null);
+				var uexp = exp as IUnaryExpression; 
+				var value = this.evaluateExpression(object, uexp.argument);
+				return this.calculateExpression(uexp.operator, value);
 
 			case 'Identifier':
-				return object[exp.name];
+				return object[(exp as IIdentifier).name];
 
 			case 'MemberExpression':
-				var parent = this.evaluateExpression(object, exp.object);
-				return this.evaluateExpression(parent, exp.property);
+				var mexp = exp as IMemberExpression; 
+				var parent = this.evaluateExpression(object, mexp.object);
+				return this.evaluateExpression(parent, mexp.property);
 
 			case 'Literal':
-				return exp.value;
+				return (exp as ILiteral).value;
 
 			default:
 				throw new Error('condition type ' + exp.type + ' is not recognized');
 		}
 	}
 
-	private static calculateExpression(operator: any, value1: any, value2: any) : any {
+	// Calculate an expression accoring to the operator
+	export function calculateExpression(operator: any, value1: any, value2: any = null) : any {
 		switch (operator) {
 
 			case '!':
