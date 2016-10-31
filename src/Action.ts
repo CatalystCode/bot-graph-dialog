@@ -1,4 +1,4 @@
-import builder = require('botbuilder');
+import * as builder from 'botbuilder';
 
 export interface IExecute {
     (session: builder.Session, next, data): void
@@ -11,8 +11,8 @@ export interface ICustomNodeTypeHandler {
 
 export class CustomNodeTypeHandler implements ICustomNodeTypeHandler {
 		
-		constructor(public name: string, public execute: IExecute) {
+	constructor(public name: string, public execute: IExecute) {
 
-		}
+	}
 
 }

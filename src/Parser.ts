@@ -1,27 +1,28 @@
-import n = require('./Node');
+import { NodeType, INode, Node } from './Node';
 import { Scenario } from './Scenario';
 import { ConditionHandler } from './ConditionHandler';
-import l = require('./Luis');
+import { ILuisModel, LuisModel } from './Luis';
 import { Map, List } from './Common';
-import builder = require('botbuilder');
-import path = require('path');
+import * as builder from 'botbuilder';
+import * as path from 'path';
+import * as extend from 'extend';
+import * as strformat from 'strformat';
 
-var extend = require('extend');
-var strformat = require('strformat');
-let NodeType = n.NodeType;
-
+// This externally implementable interface is used to define a custom handler
 export interface IParserOptions {
 	scenario?: string;
 	loadScenario?(name: string): Promise<any>;
 	loadHandler?(name: string): Promise<string>;
-} 
+}
+
+// Parse a json based scenario into a tree of nodes
 export class Parser {
 
   private uniqueNodeId: number = 1;
 
-  public root: n.INode = null;
-  private nodes = new Map<any>();
-  public models = new Map<l.ILuisModel>();
+  public root: INode = null;
+  private nodes = new Map<INode>();
+  public models = new Map<ILuisModel>();
   public handlers = new Map<any>();
   private done: () => any;
 
@@ -44,14 +45,15 @@ export class Parser {
     });
   }
 
-  public getNodeInstanceById(id: string) : n.INode {
+  public getNodeInstanceById(id: string) : INode {
     //let node = this.nodes.get(id);
     let node = this.nodes[id]; // TODO: check why above line doesn't work
-    return <n.INode>(node && node._instance);
+    return <INode>(node && node._instance);
   }
 
   private normalizeGraph(origGraph: any): Promise<any> {
     return new Promise((resolve, reject) => {
+      
       // create a copy of the graph object
       var graph: any = {};
       extend(true, graph, origGraph);
@@ -66,28 +68,28 @@ export class Parser {
         // first iteration- create Node instances
         for (let nodeId in nodes) {
           let node = nodes[nodeId];
-          let inst = new n.Node(node, node.type);
+          let inst = new Node(node, node.type);
           node._instance = inst;
         }
 
         // second iteration- connect reference to Node instances
         for (let nodeId in nodes) {
           let node = nodes[nodeId];
-          let inst = <n.INode>node._instance;
+          let inst = <INode>node._instance;
           if (node._parent) inst.parent = node._parent._instance;
           if (node._prev) inst.prev = node._prev._instance;
           if (node._next) inst.next = node._next._instance;
           (node.steps || []).forEach((step: any) => {
-            inst.steps.add(<n.INode>step._instance);
+            inst.steps.add(<INode>step._instance);
           });
           (node.scenarios || []).forEach((scenario: any) => {
-            let scenarioNode: n.INode = null;
+            let scenarioNode: INode = null;
             if (scenario.nodeId) {
               scenarioNode = this.nodes[scenario.nodeId]._instance;
             }
             let scene = new Scenario(<string>scenario.condition, scenarioNode);
             (scenario.steps || []).forEach((step: any) => {
-              scene.steps.add(<n.INode>step._instance);
+              scene.steps.add(<INode>step._instance);
             });
             inst.scenarios.add(scene);
           });
@@ -104,7 +106,7 @@ export class Parser {
           delete node._next;
         }
 
-        this.root = <n.INode>graph._instance;
+        this.root = <INode>graph._instance;
         return resolve();
       }).catch(e => reject(e));
     });
@@ -254,7 +256,7 @@ export class Parser {
 
 	private updateModels(models: any[]): void {
       (models || []).forEach(model => { 
-				this.models.add(model.name, new l.LuisModel(model.name, model.url));
+				this.models.add(model.name, new LuisModel(model.name, model.url));
 			});
 	}
 }

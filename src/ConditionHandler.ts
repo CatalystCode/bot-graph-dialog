@@ -1,6 +1,4 @@
-import { Expression, IBinaryExpression, IIdentifier, ILiteral, IMemberExpression, IUnaryExpression } from './jsep';
-
-var jsep = require('jsep');
+import { jsep, IBinaryExpression, IIdentifier, ILiteral, IMemberExpression, IUnaryExpression } from 'jsep';
 
 /**
  * Parsing and calculating conditional expressions from strings
@@ -9,8 +7,8 @@ var jsep = require('jsep');
 export module ConditionHandler {
 
 	// Recursively perform an evaluation of an expression
-	export function evaluateExpression(object: any, expression: string | Expression): any {
-		var exp: Expression = null;
+	export function evaluateExpression(object: any, expression: string | jsep): any {
+		var exp: jsep = null;
 		if (typeof expression == 'string') {
 			exp = new jsep(expression);
 		} else {

@@ -1,22 +1,20 @@
 
 import { Parser } from './Parser';
-import nav = require('./Navigator');
-import n = require('./Node');
-import i = require('./IntentScorer');
-import a = require('./Action');
+import { INavigatorOptions, Navigator } from './Navigator';
+import { NodeType } from './Node';
+import { IIntentScorer, IntentScorer } from './IntentScorer';
+import { ICustomNodeTypeHandler, CustomNodeTypeHandler } from './Action';
 import { Map, List } from './Common';
-import builder = require('botbuilder');
-import path = require('path');
+import * as builder from 'botbuilder';
+import * as path from 'path';
+import * as extend from 'extend';
+import * as strformat from 'strformat';
 
-var extend = require('extend');
-var strformat = require('strformat');
 var uuid = require('uuid');
 
-let NodeType = n.NodeType;
-
-export interface IGraphDialogOptions extends nav.INavigatorOptions { 
+export interface IGraphDialogOptions extends INavigatorOptions { 
 	bot?: builder.UniversalBot;
-  customTypeHandlers?: a.ICustomNodeTypeHandler[]
+  customTypeHandlers?: ICustomNodeTypeHandler[]
 }
 
 export interface IHandler {
@@ -28,54 +26,57 @@ interface IStepFunction {
 }
 
 export interface IGraphDialog {
-    init(): Promise<IGraphDialog>;
-    getDialog(): IStepFunction;
-    //static fromScenario(options: IGraphDialogOptions): Promise<IGraphDialog>
+  init(): Promise<IGraphDialog>;
+  getDialog(): IStepFunction;
 }
 
 
 export class GraphDialog implements IGraphDialog {
 
-	private nav: nav.Navigator;
-  private intentScorer: i.IIntentScorer;
+	private nav: Navigator;
+  private intentScorer: IIntentScorer;
 	private done: () => any;
-  private customTypeHandlers: Map<a.ICustomNodeTypeHandler>;
+  private customTypeHandlers: Map<ICustomNodeTypeHandler>;
 
   private loopDialogName: string = '__internalLoop';
 
 	constructor(private options: IGraphDialogOptions = {}) {
-		if (!options.bot) throw new Error('please provide the bot object');
-    // TODO add GUID
+		
+    if (!options.bot) throw new Error('please provide the bot object');
+    
     this.loopDialogName += options.scenario + uuid.v4();
     this.setBotDialog();
     
-    this.intentScorer = new i.IntentScorer();
+    this.intentScorer = new IntentScorer();
 
-    options.customTypeHandlers = options.customTypeHandlers || new Array<a.ICustomNodeTypeHandler>();
-    this.customTypeHandlers = new Map<a.CustomNodeTypeHandler>();
-    for (let i=0; i<options.customTypeHandlers.length; i++) {
-      let handler = <a.ICustomNodeTypeHandler>options.customTypeHandlers[i];
+    // Initialize custom handlers
+    options.customTypeHandlers = options.customTypeHandlers || new Array<ICustomNodeTypeHandler>();
+    this.customTypeHandlers = new Map<CustomNodeTypeHandler>();
+    for (let i=0; i < options.customTypeHandlers.length; i++) {
+      let handler = <ICustomNodeTypeHandler>options.customTypeHandlers[i];
       this.customTypeHandlers.add(handler.name, handler);
     }
 	}
 
-  public init(): Promise<IGraphDialog> {
+  // Initialize a graph based on graph options like a predefined JSON schema
+  public init(): Promise<any> {
     return new Promise((resolve, reject) => {
       let parser = new Parser(this.options);
       parser.init().then(() => {
         console.log('parser is ready');
-        this.nav = new nav.Navigator(parser);
+        this.nav = new Navigator(parser);
         return resolve(this);
       }).catch(e => reject(e));
     });
   }
 
+  // Generate a new graph dialog constructed based on 
 	public static fromScenario(options: IGraphDialogOptions = {}): Promise<IGraphDialog> {
-		let gd = new GraphDialog(options);
-    return gd.init();
+		let graphDialog = new GraphDialog(options);
+    return graphDialog.init();
 	}
 
-	public getDialog(): IStepFunction {
+  public getDialog(): IStepFunction {
 		console.log('get dialog');
     return (session: builder.Session, results, next) => {
         console.log('calling loop function for the first time');
@@ -140,10 +141,10 @@ export class GraphDialog implements IGraphDialog {
       case NodeType.score:
         var botModels = currentNode.data.models.map(model => this.nav.models.get(model));
         
-        var text = session.dialogData[currentNode.data.source] || session.dialogData._lastMessage;
-        console.log(`LUIS scoring for node: ${currentNode.id}, text: \'${text}\' LUIS models: ${botModels}`);
+        var score_text = session.dialogData[currentNode.data.source] || session.dialogData._lastMessage;
+        console.log(`LUIS scoring for node: ${currentNode.id}, text: \'${score_text}\' LUIS models: ${botModels}`);
 
-        this.intentScorer.collectIntents(botModels, text, currentNode.data.threashold)
+        this.intentScorer.collectIntents(botModels, score_text, currentNode.data.threashold)
           .then(intents => {
               if (intents && intents.length) {
                 this.stepResultCollectionHandler(session, { response: intents[0] }, next);
@@ -174,7 +175,7 @@ export class GraphDialog implements IGraphDialog {
 
       default:
 
-        let customHandler: a.ICustomNodeTypeHandler = this.customTypeHandlers.get(currentNode.typeName);
+        let customHandler: ICustomNodeTypeHandler = this.customTypeHandlers.get(currentNode.typeName);
         if (customHandler) {
           console.log(`invoking custom node type handler: ${currentNode.typeName}`);
           return customHandler.execute(session, next, currentNode.data);

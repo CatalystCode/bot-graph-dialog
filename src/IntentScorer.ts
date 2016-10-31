@@ -1,17 +1,19 @@
 
-
-import l = require('./Luis');
-var request = require('request-promise');
-var Promise = require('promise');
-var _ = require('underscore');
+import { ILuisModel, LuisModel, IIntentScore, IntentScore } from './Luis';
+import * as request from 'request-promise';
+import * as Promise from 'promise';
+import * as _ from 'underscore';
 
 export interface IIntentScorer {
-  collectIntents(models: l.ILuisModel[], text: string, threashold: number): Promise<l.IIntentScore[]>;
+  collectIntents(models: ILuisModel[], text: string, threashold: number): Promise<IIntentScore[]>;
 }
 
+/**
+ * Score intents from a single or multiple intent scoring APIs
+ */
 export class IntentScorer implements IIntentScorer {
 
-	 public collectIntents(models: l.ILuisModel[], text: string, threashold: number = 0): Promise<l.IIntentScore[]> {
+	 public collectIntents(models: ILuisModel[], text: string, threashold: number = 0): Promise<any> {
 
 			let promises: Promise<any>[] = models.map(model => {
 				return this.scoreIntent(model, text, threashold);
@@ -31,7 +33,7 @@ export class IntentScorer implements IIntentScorer {
 			});  
 	 }
 
-	 private scoreIntent(model: l.ILuisModel, text: string, threashold: number = 0): Promise<l.IIntentScore> {
+	 private scoreIntent(model: ILuisModel, text: string, threashold: number = 0): Promise<any> {
 		 return new Promise(function (resolve, reject) {
 			 return request(model.url + encodeURIComponent(text))
 				.then(result => {
@@ -44,7 +46,7 @@ export class IntentScorer implements IIntentScorer {
 					let intent = json.intents[0];
 					intent.model = model.name;
 
-					return resolve(<l.IIntentScore>intent);
+					return resolve(<IIntentScore>intent);
 				})
 				.catch(reject);
 		});
