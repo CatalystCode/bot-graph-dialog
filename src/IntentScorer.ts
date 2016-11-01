@@ -1,7 +1,7 @@
 
 import { ILuisModel, LuisModel, IIntentScore, IntentScore } from './Luis';
 import * as request from 'request-promise';
-import * as Promise from 'promise';
+import * as Promise from 'bluebird';
 import * as _ from 'underscore';
 
 export interface IIntentScorer {

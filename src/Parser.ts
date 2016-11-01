@@ -7,6 +7,7 @@ import * as builder from 'botbuilder';
 import * as path from 'path';
 import * as extend from 'extend';
 import * as strformat from 'strformat';
+import * as Promise from 'bluebird';
 
 // This externally implementable interface is used to define a custom handler
 export interface IParserOptions {
