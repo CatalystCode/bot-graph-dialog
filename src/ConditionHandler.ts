@@ -1,4 +1,4 @@
-import { jsep, IBinaryExpression, IIdentifier, ILiteral, IMemberExpression, IUnaryExpression } from 'jsep';
+import * as jsep from 'jsep';
 
 /**
  * Parsing and calculating conditional expressions from strings
@@ -7,10 +7,10 @@ import { jsep, IBinaryExpression, IIdentifier, ILiteral, IMemberExpression, IUna
 export module ConditionHandler {
 
 	// Recursively perform an evaluation of an expression
-	export function evaluateExpression(object: any, expression: string | jsep): any {
-		var exp: jsep = null;
+	export function evaluateExpression(object: any, expression: string | jsep.IExpression): any {
+		var exp: jsep.IExpression = null;
 		if (typeof expression == 'string') {
-			exp = new jsep(expression);
+			exp = jsep(expression);
 		} else {
 			exp = expression;
 		}
@@ -18,26 +18,26 @@ export module ConditionHandler {
 		// Analyze the expression according to its type
 		switch (exp.type) {
 			case 'BinaryExpression':
-				var bexp = exp as IBinaryExpression;
+				var bexp = exp as jsep.IBinaryExpression;
 				var value1 = this.evaluateExpression(object, bexp.left);
 				var value2 = this.evaluateExpression(object, bexp.right);
 				return this.calculateExpression(bexp.operator, value1, value2);
 
 			case 'UnaryExpression':
-				var uexp = exp as IUnaryExpression; 
+				var uexp = exp as jsep.IUnaryExpression; 
 				var value = this.evaluateExpression(object, uexp.argument);
 				return this.calculateExpression(uexp.operator, value);
 
 			case 'Identifier':
-				return object[(exp as IIdentifier).name];
+				return object[(exp as jsep.IIdentifier).name];
 
 			case 'MemberExpression':
-				var mexp = exp as IMemberExpression; 
+				var mexp = exp as jsep.IMemberExpression; 
 				var parent = this.evaluateExpression(object, mexp.object);
 				return this.evaluateExpression(parent, mexp.property);
 
 			case 'Literal':
-				return (exp as ILiteral).value;
+				return (exp as jsep.ILiteral).value;
 
 			default:
 				throw new Error('condition type ' + exp.type + ' is not recognized');
