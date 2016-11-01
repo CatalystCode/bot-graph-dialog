@@ -35,7 +35,7 @@ export class Parser {
     return new Promise((resolve, reject) => {
       this.options.loadScenario(this.options.scenario)
         .then((graph) => {
-          this.normalizeGraph(graph).then(() => {
+          return this.normalizeGraph(graph).then(() => {
             return resolve();
           }).catch(e => reject(e));
         })
@@ -139,7 +139,7 @@ export class Parser {
               nodeItem._next && nodeItem._next.id ? '[next: ' + nodeItem._next.id  + ']' : '', 
               nodeItem._prev && nodeItem._prev.id ? '[prev: ' + nodeItem._prev.id  + ']' : '');
 
-            this.recursive(nodeItem).then(() => {
+            return this.recursive(nodeItem).then(() => {
               return resolve();
             }).catch(e => reject(e));
           }).catch(e => reject(e));
@@ -177,7 +177,7 @@ export class Parser {
                 nodeItem._next && nodeItem._next.id ? '[next: ' + nodeItem._next.id  + ']' : '', 
                 nodeItem._prev && nodeItem._prev.id ? '[prev: ' + nodeItem._prev.id  + ']' : '');
 
-              this.recursive(nodeItem).then(() => {
+              return this.recursive(nodeItem).then(() => {
                 return resolve();
               }).catch(e => reject(e));
             }).catch(e => reject(e));
@@ -207,10 +207,10 @@ export class Parser {
       this.initNodes(node, node.steps).then(() => {
 
         var promises = (node.scenarios || []).map(scenario => this.initNodes(node, scenario.steps));
-        Promise.all(promises).then(() => {
+        return Promise.all(promises).then(() => {
 
           if (node.type === 'sequence') {
-            this.initNodes(node, node.steps).then(()=> {
+            return this.initNodes(node, node.steps).then(()=> {
               this.nodes[node.id] = node; 
               return resolve();
             }).catch(e => reject(e));
