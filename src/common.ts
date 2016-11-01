@@ -54,20 +54,3 @@ export class Map<T> {
     }
     
 }
-
-
-/*
-export interface IHandler {
-    handle: () => void
-}
-
-*/
-/*
-export abstract class Handler implements IHandler {
-
-	public handle = () => {
-
-	}
-
-}
-*/

@@ -19,7 +19,6 @@ export class Navigator {
   public handlers: Map<any>;
 
 	constructor(private parser: Parser, private options: INavigatorOptions = {}) {
-    // TODO: remove models. point nodes to Model object instead of keeping a map for models.
     this.models = parser.models;
     this.handlers = parser.handlers;
 	}
@@ -50,7 +49,6 @@ export class Navigator {
     for (var i=0; i<current.scenarios.size(); i++) {
       var scenario = current.scenarios.get(i);
 
-      // TODO move evaluateExpression into Scenario class
       if (ConditionHandler.evaluateExpression(session.dialogData, scenario.condition)) {
         next = scenario.node || scenario.steps.get(0);
       }

@@ -26,9 +26,7 @@ export interface INode {
 		scenarios?: List<IScenario>
 }
 
-/**
- * 
- */
+
 export class Node implements INode {
 
 	private tree: any[];
