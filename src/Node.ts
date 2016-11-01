@@ -1,6 +1,7 @@
 import { List } from './Common';
-import s = require('./Scenario');
+import { IScenario, Scenario } from './Scenario';
 
+// Types of nodes definable by the 
 export enum NodeType {
 	text,
 	prompt,
@@ -22,8 +23,9 @@ export interface INode {
 		prev?: INode,
 		next?: INode,
 		steps?: List<INode>,
-		scenarios?: List<s.IScenario>
+		scenarios?: List<IScenario>
 }
+
 
 export class Node implements INode {
 
@@ -36,7 +38,7 @@ export class Node implements INode {
 	public body: any;
 	public data: any;
 	public steps: List<INode>;
-	public scenarios: List<s.IScenario>;
+	public scenarios: List<IScenario>;
 	public parent: INode;
 	public prev: INode;
 	public next: INode;
@@ -53,7 +55,7 @@ export class Node implements INode {
 
 		this.varname = node.varname || this.id;
 		this.steps = new List<INode>();
-		this.scenarios = new List<s.IScenario>();
+		this.scenarios = new List<IScenario>();
 
 		this.body = node;
 		this.data = node.data;

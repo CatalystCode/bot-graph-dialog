@@ -1,22 +1,8 @@
+// This file contains common helper classes
 
-
-/*
-export interface IHandler {
-    handle: () => void
-}
-
-*/
-/*
-export abstract class Handler implements IHandler {
-
-	public handle = () => {
-
-	}
-
-}
-*/
-
-
+/**
+ * A generic list to help with operations on arrays
+ */
 export class List<T> {
     private items: Array<T>;
 
@@ -37,6 +23,9 @@ export class List<T> {
     }
 }
 
+/**
+ * A generic class to manage mapping on arrays from string to a generic type
+ */
 export class Map<T> {
     private items: { [key: string]: T };
 
@@ -65,4 +54,3 @@ export class Map<T> {
     }
     
 }
-

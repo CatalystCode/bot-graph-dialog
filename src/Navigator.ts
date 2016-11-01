@@ -1,34 +1,30 @@
-import n = require('./Node');
-import s = require('./Scenario');
+import { NodeType, INode } from './Node';
+import { IScenario, Scenario } from './Scenario';
 import { ConditionHandler } from './ConditionHandler';
-import l = require('./Luis');
+import { ILuisModel } from './Luis';
 import { Map, List } from './Common';
-import p = require('./Parser');
-import builder = require('botbuilder');
-import path = require('path');
+import { Parser, IParserOptions } from './Parser';
+import * as builder from 'botbuilder';
+import * as path from 'path';
+import * as extend from 'extend';
+import * as strformat from 'strformat';
 
-var extend = require('extend');
-var strformat = require('strformat');
-
-let NodeType = n.NodeType;
-
-export interface INavigatorOptions extends p.IParserOptions {
+export interface INavigatorOptions extends IParserOptions {
 	
 } 
 
 export class Navigator {
 
-  public models: Map<l.ILuisModel>;
+  public models: Map<ILuisModel>;
   public handlers: Map<any>;
 
-
-	constructor(private parser: p.Parser, private options: INavigatorOptions = {}) {
-    // TODO: remove models. point nodes to Model object instead of keeping a map for models.
+	constructor(private parser: Parser, private options: INavigatorOptions = {}) {
     this.models = parser.models;
     this.handlers = parser.handlers;
 	}
 
-  public getCurrentNode(session: builder.Session): n.INode {
+  // Returns the current node of the dialog
+  public getCurrentNode(session: builder.Session): INode {
     console.log('getCurrentNode');
     let currNodeId = <string>session.dialogData._currentNodeId;
     if (!currNodeId) {
@@ -41,19 +37,18 @@ export class Navigator {
     return current;
   }
 
-
-  public getNextNode(session: builder.Session) : n.INode {
+  // Retreives the next node in the dialog
+  public getNextNode(session: builder.Session) : INode {
     console.log('getNextNode');
-    let next : n.INode = null;
+    let next : INode = null;
     let current = this.parser.getNodeInstanceById(session.dialogData._currentNodeId);
 
     // If there are child scenarios, see if one of them answers a condition
     // In case it is, choose the first step in that scenario to as the next step
-    let scenarios: List<s.IScenario> = current.scenarios;
+    let scenarios: List<IScenario> = current.scenarios;
     for (var i=0; i<current.scenarios.size(); i++) {
       var scenario = current.scenarios.get(i);
 
-      // TODO move evaluateExpression into Scenario class
       if (ConditionHandler.evaluateExpression(session.dialogData, scenario.condition)) {
         next = scenario.node || scenario.steps.get(0);
       }
