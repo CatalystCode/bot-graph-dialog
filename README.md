@@ -8,7 +8,7 @@ These dialogs can be loaded dynamically from any external data source (db, file 
 
 Code sample for how to use this library can be found [here](https://github.com/CatalystCode/bot-trees).
 
-**Read more about the motivation for developing this extension [here](http://TODO-ADD-WHEN-PUBLISHED)**
+**Read more about the motivation for developing this extension [here](http://TODO-ADD-CASE-STUDY-LINK-WHEN-PUBLISHED)**
 
 
 ## Getting Started
@@ -17,7 +17,7 @@ Code sample for how to use this library can be found [here](https://github.com/C
 ### Usage
 
 ```
-  npm install [--save] bot-graph-dialog
+npm install [--save] bot-graph-dialog
 ```
 
 ### Code Sample
@@ -31,6 +31,7 @@ var connector = new builder.ChatConnector({
     appPassword: '<microsoft_bot_password>',
   });
 var bot = new builder.UniversalBot(connector);
+var intents = new builder.IntentDialog();   
 bot.dialog('/', intents);
 
 // handler for loading scenarios from external datasource
@@ -60,7 +61,7 @@ BotGraphDialog.GraphDialog
 
 ## Sample Scenarios
 
-Follow [these samples](examples) as a reference to create your own scenarios.
+Follow [these samples](examples/scenarios) as a reference to create your own scenarios.
 
 
 ## Schema Break Down
