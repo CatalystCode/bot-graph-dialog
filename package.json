@@ -1,6 +1,6 @@
 {
   "name": "bot-graph-dialog",
-  "version": "1.0.0",
+  "version": "3.2.3",
   "description": "bot graph dialog",
   "main": "index.js",
   "scripts": {
