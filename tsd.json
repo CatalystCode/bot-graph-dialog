@@ -1,0 +1,36 @@
+{
+  "version": "v4",
+  "repo": "borisyankov/DefinitelyTyped",
+  "ref": "master",
+  "path": "typings",
+  "bundle": "typings/tsd.d.ts",
+  "installed": {
+    "uuid/UUID.d.ts": {
+      "commit": "44be13ae844ec0721109542d5902e41438d72855"
+    },
+    "extend/extend.d.ts": {
+      "commit": "44be13ae844ec0721109542d5902e41438d72855"
+    },
+    "request/request.d.ts": {
+      "commit": "44be13ae844ec0721109542d5902e41438d72855"
+    },
+    "request-promise/request-promise.d.ts": {
+      "commit": "44be13ae844ec0721109542d5902e41438d72855"
+    },
+    "form-data/form-data.d.ts": {
+      "commit": "44be13ae844ec0721109542d5902e41438d72855"
+    },
+    "bluebird/bluebird-2.0.d.ts": {
+      "commit": "44be13ae844ec0721109542d5902e41438d72855"
+    },
+    "node/node.d.ts": {
+      "commit": "44be13ae844ec0721109542d5902e41438d72855"
+    },
+    "promise/promise.d.ts": {
+      "commit": "44be13ae844ec0721109542d5902e41438d72855"
+    },
+    "underscore/underscore.d.ts": {
+      "commit": "44be13ae844ec0721109542d5902e41438d72855"
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "botGames",
+  "type": "sequence",
+  "steps": [
+    {
+      "id": "whatDoYouWantToDo",
+      "type": "prompt",
+      "data": { "text": "try to set an alarm or commands like quit, start over, etc..." }
+    },
+    {
+      "id": "userIntent",
+      "type": "score",
+      "data": { 
+        "source": "whatDoYouWantToDo", 
+        "models": [ "bot-common-responses", "Bottle" ]
+      },
+      "scenarios": [
+        {
+          "condition": "userIntent.intent == 'set alarm'",
+          "steps": [
+            {
+              "type": "handler",
+              "data": { 
+                "name": "set_alarm", 
+                "source": "userIntent",
+                "target": "alarmTime" 
+              }
+            }
+          ]
+        },
+        {
+          "condition": "userIntent.intent == 'start over'",
+          "nodeId": "whatDoYouWantToDo"
+        },
+        {
+          "condition": "userIntent.intent == 'quit'",
+          "steps": [
+            {
+              "type": "end",
+              "data": { "text": "Thank you, goodbye." }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "data": { "text": "Done doing '{whatDoYouWantToDo}'." }
+    }
+  ],
+  "models": [
+    {
+      "name": "bot-common-responses",
+      "url": "https://api.projectoxford.ai/luis/v1/application?id=7ff935f4-fe33-4a2a-b155-b82dbbf456ed&subscription-key=d7b46a6c72bf46c1b67f2c4f21acf960&q="
+    },
+    {
+      "name": "Bottle",
+      "url": "https://api.projectoxford.ai/luis/v1/application?id=0a2cc164-5a19-47b7-b85e-41914d9037ba&subscription-key=d7b46a6c72bf46c1b67f2c4f21acf960&q="
+    }
+  ]
+}

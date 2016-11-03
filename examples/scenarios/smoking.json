@@ -1,0 +1,38 @@
+{
+  "id": "smoking",
+  "type": "sequence",
+  "steps": [
+    {
+      "id": "isSmoking",
+      "type": "prompt",
+      "data": { "type": "confirm", "text": "Do you smoke?" },
+      "scenarios": [
+        {
+          "condition": "isSmoking",
+          "steps": [
+            {
+              "id": "smokeTime",
+              "type": "prompt",
+              "data": { "type": "number", "text": "For how many years?" }
+            }
+          ]
+        },
+        {
+          "condition": "!isSmoking",
+          "steps": [
+            {
+              "id": "sureNotSmoking",
+              "type": "prompt",
+              "data": { "type":"confirm", "text": "Are you sure?" },
+              "scenarios": [
+                {
+                  "condition": "!sureNotSmoking",
+                  "nodeId": "isSmoking"
+                }
+              ]
+            }
+          ]
+      }]
+    }
+  ]
+}

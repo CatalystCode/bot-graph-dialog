@@ -1,0 +1,128 @@
+{
+  "id": "stomachPain",
+  "type": "sequence",
+  "steps": [
+    {
+      "id": "age",
+      "type": "prompt",
+      "data": { "type": "number", "text": "How old are you?" }
+    },
+    {
+      "id": "whenStart",
+      "type": "prompt",
+      "data": { "type": "time", "text": "When did it start?" }
+    },
+    {
+      "subScenario": "smoking"
+    },
+    {
+      "id": "workout",
+      "type": "prompt",
+      "data": { 
+        "type": "choice",
+        "text": "What kind of workout do you do?",
+        "options":  [ "None", "Crossfit", "TRX", "Kung-Fu" ]
+      },
+      "varname": "workout",
+      "scenarios": [
+        {
+          "condition": "workout == 'Crossfit'",
+          "steps": [
+            {
+              "id": "cfWeight",
+              "type": "prompt",
+              "data": { "type":"number", "text": "How much do you lift?" },
+              "scenarios": [
+                {
+                  "condition": "cfWeight <= 100",
+                  "steps": [
+                    {
+                      "id": "cfWeightSmallReason",
+                      "type": "prompt",
+                      "data": { "text": "Why so lite?" }
+                    }
+                  ]
+                },
+                {
+                  "condition": "cfWeight > 100",
+                  "steps": [
+                    {
+                      "id": "cfCrazy",
+                      "type": "prompt",
+                      "data": { "type":"confirm", "text": "Are you crazy?" },
+                      "scenarios": [
+                        {
+                          "condition": "cfCrazy",
+                          "steps": [
+                            {
+                              "id": "takePills",
+                              "type": "text",
+                              "data": {"text": "Please start taking your pills" }
+                            }
+                          ]
+                        },
+                        {
+                          "condition": "!cfCrazy",
+                          "steps": [
+                            {
+                              "id": "cfHowLong",
+                              "type": "prompt",
+                              "data": { "type":"number", "text": "How many years have you been working out?" }
+                            },
+                            {
+                              "id": "cfInstructor",
+                              "type": "prompt",
+                              "data": { "text": "Who is your instructor?" }
+                            },
+                            {
+                              "id": "cfWhere",
+                              "type": "prompt",
+                              "data": { "text": "Where do you work out?" }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "condition": "workout == 'TRX'",
+          "steps": [
+            {
+              "id": "trxStrength",
+              "type": "prompt",
+              "data": {
+                "type":"choice",
+                "text": "What is the strength of the rope?",
+                "options": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+              }
+            }
+          ]
+        },
+        {
+          "condition": "workout == 'Kung-Fu'",
+          "steps": [
+            {
+              "id": "kfYears",
+              "type": "prompt",
+              "data": { "type":"number", "text": "How many years have you neen practicing?" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "data": { "text": "Please wait while we finalize the data..." }
+    },
+    {
+      "id": "finalize",
+      "type": "handler",
+      "data": { "name": "summary" }
+    }
+  ]  
+}
