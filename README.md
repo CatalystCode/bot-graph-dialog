@@ -1,33 +1,74 @@
 # bot-graph-dialog
-Graph Bot Dialog
+
+This node module is an extension for Microsoft Bot Framework. 
+
+Use this library to define graph-based dialogs instead of the waterfall dialogs supported today.
+Also, instead of hard coding your dialogs, use this library to define your dialogs as jsons.
+These dialogs can be loaded dynamically from any external data source (db, file system, etc.)
+
+Code sample for how to use this library can be found [here](https://github.com/CatalystCode/bot-trees).
+
+**Read more about the motivation for developing this extension [here](http://TODO-ADD-WHEN-PUBLISHED)**
 
 
 ## Getting Started
 
-```js
-var BotGraphDialog = require('bot-graph-dialog');
 
-// these are optional, only provide if you're using subScenarios and/or custom handlers
-var scenariosPath = path.join(__dirname, 'scenarios');
-var handlersPath = path.join(__dirname, 'handlers');
-
-// read scenario graph json
-var stomachPainGraph = require('./scenarios/stomachPain.json');
-
-// create graph dialog instance
-var stomachPainGraphDialog = new BotGraphDialog({tree: stomachPainGraph, scenariosPath, handlersPath});
-
-// attach stomach pain graph dialog to handle 'stomach' message
-intents.matches(/^stomach/i, stomachPainGraphDialog.getSteps());
+### Usage
 
 ```
+  npm install [--save] bot-graph-dialog
+```
+
+### Code Sample
+
+```js
+var builder = require('botbuilder');
+var BotGraphDialog = require('bot-graph-dialog');
+
+var connector = new builder.ChatConnector({
+    appId: '<microsoft_bot_id>',
+    appPassword: '<microsoft_bot_password>',
+  });
+var bot = new builder.UniversalBot(connector);
+bot.dialog('/', intents);
+
+// handler for loading scenarios from external datasource
+function loadScenario(scenario) {
+	return new Promise((resolve, reject) => {
+		console.log('loading scenario', scenario);
+		
+		// implement loadScenario from external datasource.
+		var scenarioObj = ...
+		resolve(scenarioObj);  
+	});
+}
+
+BotGraphDialog.GraphDialog
+  .fromScenario({ 
+    bot,
+    scenario: '<scenarioName>', 
+    loadScenario
+  })
+  // attach stomach pain graph dialog to handle 'stomach' message
+  .then(graphDialog => intents.matches(/^stomach/i, graphDialog.getDialog()));
+
+```
+
+**See sample bot app [here](https://github.com/CatalystCode/bot-trees)**
+
+
+## Sample Scenarios
+
+Follow [these samples](examples) as a reference to create your own scenarios.
+
 
 ## Schema Break Down
 
 Each step\scenario in the schema is recursive.
 
 * `id` - The id for the step
-* `type` [required] - The type of the step.
+* `type` [required] - The type of the step:
   * `text`
   * `sequence`
   * `prompt`
@@ -42,6 +83,7 @@ Each step\scenario in the schema is recursive.
 #### type: "text"
 
 Display a text which can also be formatted with dialog variables.
+
 Properties:
 
 ```json
@@ -54,6 +96,7 @@ Properties:
 #### type: "sequence"
 
 This step is a wrapper of one or more subsidiary steps.
+
 Properties:
 
 ```json
@@ -67,6 +110,7 @@ Properties:
 #### type: "prompt"
 
 Prompt for a defined user response.
+
 Properties:
 
 ```json
@@ -88,7 +132,8 @@ Prompt types can be one of:
 
 #### type: "score"
 
-Get a text from the user and resolve the intent again a single or multiple intent recognition APIs.
+Get a text from the user and resolve the intent against a single or multiple intent recognition (Luis) APIs.
+
 Properties:
 
 ```json
@@ -122,7 +167,8 @@ Under scenarios, define a condition for expected intent and which scenario \ ste
 
 #### type: "handler"
 
-This enables to enter a plug in with custom code
+Enables providing a custom code to handle a specific step.
+
 Properties:
 
 ```json
@@ -132,12 +178,12 @@ Properties:
 }
 ```
 
-`name` is the file representing the handler file name.
-In this case, a search will look for a file names `handler.js`.
+`name` the name for this handler. This will be provided to the callback for loading this handler.
 
 #### type: "end"
 
-End the dialog and ignore any further steps
+End the dialog and ignore any further steps.
+
 Properties:
 
 ```json
@@ -172,6 +218,5 @@ This property defined the models that can be used for intent recognition through
 }
 ```
 
-## Sample Scenarios
-
-[Here](examples)
+# License
+[MIT](LICENSE)
