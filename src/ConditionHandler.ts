@@ -6,7 +6,12 @@ import * as jsep from 'jsep';
  */
 export module ConditionHandler {
 
-	// Recursively perform an evaluation of an expression
+	/**
+	 * Recursively perform an evaluation of an expression
+	 * @param  {any} object
+	 * @param  {string|jsep.IExpression} expression
+	 * @returns any
+	 */
 	export function evaluateExpression(object: any, expression: string | jsep.IExpression): any {
 		var exp: jsep.IExpression = null;
 		if (typeof expression == 'string') {
@@ -44,7 +49,14 @@ export module ConditionHandler {
 		}
 	}
 
-	// Calculate an expression accoring to the operator
+	
+	/**
+	 * Calculate an expression accoring to the operator
+	 * @param  {any} operator
+	 * @param  {any} value1
+	 * @param  {any=null} value2
+	 * @returns any
+	 */
 	export function calculateExpression(operator: any, value1: any, value2: any = null) : any {
 		switch (operator) {
 

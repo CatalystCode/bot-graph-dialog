@@ -9,21 +9,62 @@ import * as path from 'path';
 import * as extend from 'extend';
 import * as strformat from 'strformat';
 
+/**
+ * Interface for the Navigator constructor options object
+ * 
+ * @export
+ * @interface INavigatorOptions
+ * @extends {IParserOptions}
+ */
 export interface INavigatorOptions extends IParserOptions {
 	
 } 
 
+/**
+ * Helper class to navigate the dialog graph
+ * 
+ * @export
+ * @class Navigator
+ */
 export class Navigator {
 
+  /**
+   * Collection of Luis models
+   * 
+   * @type {Map<ILuisModel>}
+   * @memberOf Navigator
+   */
   public models: Map<ILuisModel>;
+  /**
+   * Collection of custom handlers
+   * 
+   * @type {Map<any>}
+   * @memberOf Navigator
+   */
   public handlers: Map<any>;
 
+	/**
+	 * Creates an instance of Navigator.
+	 * 
+	 * @param {Parser} parser
+	 * @param {INavigatorOptions} [options={}]
+	 * 
+	 * @memberOf Navigator
+	 */
 	constructor(private parser: Parser, private options: INavigatorOptions = {}) {
     this.models = parser.models;
     this.handlers = parser.handlers;
 	}
 
-  // Returns the current node of the dialog
+
+  /**
+   * Returns the current node of the dialog
+   * 
+   * @param {builder.Session} session
+   * @returns {INode}
+   * 
+   * @memberOf Navigator
+   */
   public getCurrentNode(session: builder.Session): INode {
     console.log('getCurrentNode');
     let currNodeId = <string>session.dialogData._currentNodeId;
@@ -37,7 +78,14 @@ export class Navigator {
     return current;
   }
 
-  // Retreives the next node in the dialog
+  /**
+   * Retreives the next node in the dialog
+   * 
+   * @param {builder.Session} session
+   * @returns {INode}
+   * 
+   * @memberOf Navigator
+   */
   public getNextNode(session: builder.Session) : INode {
     console.log('getNextNode');
     let next : INode = null;

@@ -9,28 +9,114 @@ import * as extend from 'extend';
 import * as strformat from 'strformat';
 import * as Promise from 'bluebird';
 
-// This externally implementable interface is used to define a custom handler
+/**
+ * Interface for the IParser options object
+ * 
+ * @export
+ * @interface IParserOptions
+ */
 export interface IParserOptions {
+	/**
+	 * The name of the scenario for this dialog
+	 * 
+	 * @type {string}
+	 * @memberOf IParserOptions
+	 */
 	scenario?: string;
+	/**
+	 * A callback for loading a scenario
+	 * 
+	 * @param {string} name The scenario name
+	 * @returns {Promise<any>}
+	 * 
+	 * @memberOf IParserOptions
+	 */
 	loadScenario?(name: string): Promise<any>;
+	/**
+	 * A callback for loading a custom handler
+	 * 
+	 * @param {string} name The custom handler name
+	 * @returns {Promise<string>}
+	 * 
+	 * @memberOf IParserOptions
+	 */
 	loadHandler?(name: string): Promise<string>;
 }
 
-// Parse a json based scenario into a tree of nodes
+
+/**
+ * Parses a json based scenario
+ * 
+ * @export
+ * @class Parser
+ */
 export class Parser {
 
+  /**
+   * 
+   * 
+   * @private
+   * @type {number}
+   * @memberOf Parser
+   */
   private uniqueNodeId: number = 1;
 
+  /**
+   * 
+   * 
+   * @type {INode}
+   * @memberOf Parser
+   */
   public root: INode = null;
+  /**
+   * 
+   * 
+   * @private
+   * 
+   * @memberOf Parser
+   */
   private nodes = new Map<INode>();
+  /**
+   * 
+   * 
+   * 
+   * @memberOf Parser
+   */
   public models = new Map<ILuisModel>();
+  /**
+   * 
+   * 
+   * 
+   * @memberOf Parser
+   */
   public handlers = new Map<any>();
+  /**
+   * A callback to be called when parsing is completed
+   * 
+   * @private
+   * 
+   * @memberOf Parser
+   */
   private done: () => any;
 
+	/**
+	 * Creates an instance of Parser.
+	 * 
+	 * @param {IParserOptions} options
+	 * 
+	 * @memberOf Parser
+	 */
 	constructor(private options: IParserOptions) {
    
 	}
 
+  /**
+   * Start loading and parsing scenario
+   * 
+   * @returns {Promise<any>}
+   * 
+   * @memberOf Parser
+   */
   public init(): Promise<any> {
     return new Promise((resolve, reject) => {
       this.options.loadScenario(this.options.scenario)
@@ -46,12 +132,29 @@ export class Parser {
     });
   }
 
+  /**
+   * Gets a node instance by its Id
+   * 
+   * @param {string} id
+   * @returns {INode}
+   * 
+   * @memberOf Parser
+   */
   public getNodeInstanceById(id: string) : INode {
     //let node = this.nodes.get(id);
     let node = this.nodes[id]; // TODO: check why above line doesn't work
     return <INode>(node && node._instance);
   }
 
+  /**
+   * Normalize the graph
+   * 
+   * @private
+   * @param {*} origGraph
+   * @returns {Promise<any>}
+   * 
+   * @memberOf Parser
+   */
   private normalizeGraph(origGraph: any): Promise<any> {
     return new Promise((resolve, reject) => {
       
@@ -113,6 +216,18 @@ export class Parser {
     });
   }
 
+  /**
+   * Init a node in the graph
+   * 
+   * @private
+   * @param {*} parent
+   * @param {any[]} nodes
+   * @param {*} nodeItem
+   * @param {number} index
+   * @returns {Promise<any>}
+   * 
+   * @memberOf Parser
+   */
   private initNode(parent: any, nodes: any[], nodeItem: any, index: number): Promise<any> {
     
       if (nodeItem._visited) 
@@ -194,11 +309,30 @@ export class Parser {
 
   }
 
+  /**
+   * Init a collecton of nodes
+   * 
+   * @private
+   * @param {*} parent
+   * @param {any[]} nodes
+   * @returns {Promise<any>}
+   * 
+   * @memberOf Parser
+   */
   private initNodes(parent: any, nodes: any[]) : Promise<any> {
       return Promise.all((nodes || []).map((item, index) => this.initNode(parent, nodes, item, index)));
   }
 
 
+  /**
+   * Recursively init a node and its childrens
+   * 
+   * @private
+   * @param {*} node
+   * @returns {Promise<any>}
+   * 
+   * @memberOf Parser
+   */
   private recursive(node: any) : Promise<any> {
 
     return new Promise((resolve, reject) => {
@@ -225,6 +359,15 @@ export class Parser {
     });
   }
   
+  /**
+   * Checks if this is a sub-scenario node, and if so- load it
+   * 
+   * @private
+   * @param {*} nodeItem
+   * @returns {boolean}
+   * 
+   * @memberOf Parser
+   */
   private isSubScenario(nodeItem: any) : boolean {
     if (!nodeItem.subScenario) return false;
 
@@ -240,6 +383,15 @@ export class Parser {
     return true;
   }
 
+  /**
+   * Get handler function from a string
+   * 
+   * @private
+   * @param {string} funcText
+   * @returns {*}
+   * 
+   * @memberOf Parser
+   */
   private getHandlerFunc(funcText: string): any {
     let text = `(function(){
                   return function(module) { 
@@ -255,6 +407,14 @@ export class Parser {
     return typeof m.exports === 'function' ? m.exports : null;
   }
 
+	/**
+	 * Updates the internal models collection
+	 * 
+	 * @private
+	 * @param {any[]} models
+	 * 
+	 * @memberOf Parser
+	 */
 	private updateModels(models: any[]): void {
       (models || []).forEach(model => { 
 				this.models.add(model.name, new LuisModel(model.name, model.url));

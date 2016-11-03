@@ -4,15 +4,46 @@ import * as request from 'request-promise';
 import * as Promise from 'bluebird';
 import * as _ from 'underscore';
 
+/**
+ * Interface for Intent Scorer
+ * 
+ * @export
+ * @interface IIntentScorer
+ */
 export interface IIntentScorer {
+  /**
+   * Collect response from all models
+   * 
+   * @param {ILuisModel[]} models
+   * @param {string} text
+   * @param {number} threashold
+   * @returns {Promise<IIntentScore[]>}
+   * 
+   * @memberOf IIntentScorer
+   */
   collectIntents(models: ILuisModel[], text: string, threashold: number): Promise<IIntentScore[]>;
 }
 
+
 /**
  * Score intents from a single or multiple intent scoring APIs
+ * 
+ * @export
+ * @class IntentScorer
+ * @implements {IIntentScorer}
  */
 export class IntentScorer implements IIntentScorer {
 
+	 /**
+	  * Collect response from all models
+	  * 
+	  * @param {ILuisModel[]} models
+	  * @param {string} text
+	  * @param {number} [threashold=0]
+	  * @returns {Promise<any>}
+	  * 
+	  * @memberOf IntentScorer
+	  */
 	 public collectIntents(models: ILuisModel[], text: string, threashold: number = 0): Promise<any> {
 
 			let promises: Promise<any>[] = models.map(model => {
@@ -33,6 +64,17 @@ export class IntentScorer implements IIntentScorer {
 			});  
 	 }
 
+	 /**
+	  * Scores a specific intent, invoke actual request to LUIS
+	  * 
+	  * @private
+	  * @param {ILuisModel} model
+	  * @param {string} text
+	  * @param {number} [threashold=0]
+	  * @returns {Promise<any>}
+	  * 
+	  * @memberOf IntentScorer
+	  */
 	 private scoreIntent(model: ILuisModel, text: string, threashold: number = 0): Promise<any> {
 		 return new Promise(function (resolve, reject) {
 			 return request(model.url + encodeURIComponent(text))

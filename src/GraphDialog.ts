@@ -12,34 +12,134 @@ import * as strformat from 'strformat';
 
 var uuid = require('uuid');
 
+
+/**
+ * Interface for {IGraphDialog} options object
+ * 
+ * @export
+ * @interface IGraphDialogOptions
+ * @extends {INavigatorOptions}
+ */
 export interface IGraphDialogOptions extends INavigatorOptions { 
+	/**
+	 * The bot object
+	 * 
+	 * @type {builder.UniversalBot}
+	 * @memberOf IGraphDialogOptions
+	 */
 	bot?: builder.UniversalBot;
+  /**
+   * list of {ICustomNodeTypeHandler} objects
+   * 
+   * @type {ICustomNodeTypeHandler[]}
+   * @memberOf IGraphDialogOptions
+   */
   customTypeHandlers?: ICustomNodeTypeHandler[]
 }
 
+/**
+ * Interface to define a custom node handler
+ * 
+ * @export
+ * @interface IHandler
+ */
 export interface IHandler {
     (session: builder.Session, results, next): void
 }
 
+/**
+ * Interface to define a step function
+ * 
+ * @interface IStepFunction
+ */
 interface IStepFunction {
   (session: builder.Session, results, next): void;
 }
 
+/**
+ * Interface for {GraphDialog} class
+ * 
+ * @export
+ * @interface IGraphDialog
+ */
 export interface IGraphDialog {
+  /**
+   * Init graph dialog
+   * 
+   * @returns {Promise<IGraphDialog>}
+   * 
+   * @memberOf IGraphDialog
+   */
   init(): Promise<IGraphDialog>;
+  /**
+   * Gets the resulting dialog to attach on the bot
+   * 
+   * @returns {IStepFunction}
+   * 
+   * @memberOf IGraphDialog
+   */
   getDialog(): IStepFunction;
 }
 
 
+/**
+ * The Graph Dialog class manages the dialog's state
+ * 
+ * @export
+ * @class GraphDialog
+ * @implements {IGraphDialog}
+ */
 export class GraphDialog implements IGraphDialog {
 
+	/**
+	 * 
+	 * 
+	 * @private
+	 * @type {Navigator}
+	 * @memberOf GraphDialog
+	 */
 	private nav: Navigator;
+  /**
+   * 
+   * 
+   * @private
+   * @type {IIntentScorer}
+   * @memberOf GraphDialog
+   */
   private intentScorer: IIntentScorer;
+	/**
+	 * 
+	 * 
+	 * @private
+	 * 
+	 * @memberOf GraphDialog
+	 */
 	private done: () => any;
+  /**
+   * 
+   * 
+   * @private
+   * @type {Map<ICustomNodeTypeHandler>}
+   * @memberOf GraphDialog
+   */
   private customTypeHandlers: Map<ICustomNodeTypeHandler>;
 
+  /**
+   * Unique private key used to bind this dialog on the bot object
+   * 
+   * @private
+   * @type {string}
+   * @memberOf GraphDialog
+   */
   private loopDialogName: string = '__internalLoop';
 
+	/**
+	 * Creates an instance of GraphDialog.
+	 * 
+	 * @param {IGraphDialogOptions} [options={}]
+	 * 
+	 * @memberOf GraphDialog
+	 */
 	constructor(private options: IGraphDialogOptions = {}) {
 		
     if (!options.bot) throw new Error('please provide the bot object');
@@ -58,7 +158,14 @@ export class GraphDialog implements IGraphDialog {
     }
 	}
 
-  // Initialize a graph based on graph options like a predefined JSON schema
+
+  /**
+   * Initialize a graph based on graph options like a predefined JSON schema
+   * 
+   * @returns {Promise<any>}
+   * 
+   * @memberOf GraphDialog
+   */
   public init(): Promise<any> {
     return new Promise((resolve, reject) => {
       let parser = new Parser(this.options);
@@ -70,12 +177,27 @@ export class GraphDialog implements IGraphDialog {
     });
   }
 
-  // Generate a new graph dialog constructed based on 
+	/**
+	 * Generate a new graph dialog constructed based on a scenario name
+	 * 
+	 * @static
+	 * @param {IGraphDialogOptions} [options={}]
+	 * @returns {Promise<IGraphDialog>}
+	 * 
+	 * @memberOf GraphDialog
+	 */
 	public static fromScenario(options: IGraphDialogOptions = {}): Promise<IGraphDialog> {
 		let graphDialog = new GraphDialog(options);
     return graphDialog.init();
 	}
 
+  /**
+   * Returns the dialog steps to bind to the bot object
+   * 
+   * @returns {IStepFunction}
+   * 
+   * @memberOf GraphDialog
+   */
   public getDialog(): IStepFunction {
 		console.log('get dialog');
     return (session: builder.Session, results, next) => {
@@ -84,6 +206,13 @@ export class GraphDialog implements IGraphDialog {
     };
 	}
 
+  /**
+   * This is where the magic happens. Loops this list of steps for each node.
+   * 
+   * @private
+   * 
+   * @memberOf GraphDialog
+   */
   private setBotDialog(): void {
 
     this.options.bot.dialog('/' + this.loopDialogName, [
@@ -112,7 +241,17 @@ export class GraphDialog implements IGraphDialog {
     ]);
   }
 
-  // TODO: add option for 'bot is typeing' message before sending the answer
+  /**
+   * This is where the bot interacts with the user
+   * 
+   * @private
+   * @param {builder.Session} session
+   * @param {any} results
+   * @param {any} next
+   * @returns {void}
+   * 
+   * @memberOf GraphDialog
+   */
   private stepInteractionHandler(session: builder.Session, results, next): void {
     session.dialogData._lastMessage = session.message && session.message.text;
     let currentNode = this.nav.getCurrentNode(session);
@@ -139,6 +278,11 @@ export class GraphDialog implements IGraphDialog {
         break;
         
       case NodeType.score:
+        /**
+         * gets list of models
+         * 
+         * @param {any} model
+         */
         var botModels = currentNode.data.models.map(model => this.nav.models.get(model));
         
         var score_text = session.dialogData[currentNode.data.source] || session.dialogData._lastMessage;
@@ -189,6 +333,17 @@ export class GraphDialog implements IGraphDialog {
     }  
   }
 
+  /**
+   * Handling collection of the user input
+   * 
+   * @private
+   * @param {builder.Session} session
+   * @param {any} results
+   * @param {any} next
+   * @returns
+   * 
+   * @memberOf GraphDialog
+   */
   private stepResultCollectionHandler(session: builder.Session, results, next) {
     let currentNode = this.nav.getCurrentNode(session);
     let varname = currentNode.varname;
@@ -219,14 +374,22 @@ export class GraphDialog implements IGraphDialog {
     return next();
   }
 
+  /**
+   * Evaluates and moves to the next node in the graph
+   * 
+   * @private
+   * @param {builder.Session} session
+   * @param {any} args
+   * @param {any} next
+   * @returns {*}
+   * 
+   * @memberOf GraphDialog
+   */
   private setNextStepHandler(session: builder.Session, args, next): any {
     let nextNode = this.nav.getNextNode(session);
 
     if (nextNode) {
       console.log(`step handler node: ${nextNode.id}`);
-
-      // workaround to go back to the first step of processing the next node
-      //session.dialogData['BotBuilder.Data.WaterfallStep'] = 0;
     }
     else {
 				console.log('ending dialog');
