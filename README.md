@@ -217,5 +217,23 @@ This property defined the models that can be used for intent recognition through
 }
 ```
 
+### Text Format
+When prompting or displaying text, it is possible to use a format to insert session variables like that:
+
+```json
+{
+  "id": "userName",
+  "type": "prompt",
+  "data": {
+    "type": "text",
+    "text": "what is your name?"
+  }
+},
+{
+  "type": "text",
+  "data": { "text": "Welcome {userName}!" }
+}
+```
+
 # License
 [MIT](LICENSE)
