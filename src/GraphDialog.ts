@@ -9,6 +9,7 @@ import * as builder from 'botbuilder';
 import * as path from 'path';
 import * as extend from 'extend';
 import * as strformat from 'strformat';
+import { Validator } from './Validator';
 
 var uuid = require('uuid');
 
@@ -132,6 +133,16 @@ export class GraphDialog implements IGraphDialog {
    * @memberOf GraphDialog
    */
   private loopDialogName: string = '__internalLoop';
+
+
+  /**
+   * If set to true, will not travel to next step as the current step needs to be validated
+   *
+   * @private
+   * @type {boolean}
+   */
+  private validateCurrentNode: boolean = false;
+
 
 	/**
 	 * Creates an instance of GraphDialog.
@@ -317,6 +328,14 @@ export class GraphDialog implements IGraphDialog {
         session.endDialog();
         break;
 
+      case NodeType.heroCard:
+        session.send(this.generateHeroCardMessage(builder, session, currentNode));
+        return next();
+
+      case NodeType.carousel:
+        session.send(this.generateCarouselMessage(builder, session, currentNode));
+        return next();
+
       default:
 
         let customHandler: ICustomNodeTypeHandler = this.customTypeHandlers.get(currentNode.typeName);
@@ -331,6 +350,105 @@ export class GraphDialog implements IGraphDialog {
         console.error(error);
         throw error; 
     }  
+  }
+
+
+  /**
+   * Generates a HeroCard (to be attached to a Message)
+   *
+   * @param builder
+   * @param session
+   * @param data
+   * @returns {HeroCard}
+   */
+  private generateHeroCard(builder, session, data) {
+    var hero = new builder.HeroCard(session);
+
+    if ("undefined" != typeof data.title) {
+      hero.title(data.title);
+    }
+    if ("undefined" != typeof data.subtitle) {
+      hero.subtitle(data.subtitle);
+    }
+    if ("undefined" != typeof data.text) {
+      hero.text(data.text);
+    }
+    if ("undefined" != typeof data.images[0] && data.images.length > 0) {
+      hero.images([
+        builder.CardImage.create(session, data.images[0])
+      ]);
+    }
+    if ("undefined" != typeof data.tap) {
+      switch (data.tap.action) {
+        case "openUrl":
+          hero.tap(builder.CardAction.openUrl(session, data.tap.value));
+          break;
+      }
+    }
+
+    if ("undefined" != typeof data.buttons) {
+      var buttons = [];
+      data.buttons.forEach((item, index) => {
+        switch (item.action) {
+          case "openUrl":
+            buttons.push(builder.CardAction.openUrl(session, item.value, item.label));
+            break;
+          case "imBack":
+            buttons.push(builder.CardAction.imBack(session, item.value, item.label));
+            break;
+        }
+      });
+      if (buttons.length > 0) {
+        hero.buttons(buttons);
+      }
+    }
+
+    return hero;
+  }
+
+  /**
+   * Generates a HeroCard Message
+   *
+   * @param builder
+   * @param session
+   * @param node
+   * @returns {Message}
+   */
+  private generateHeroCardMessage(builder, session, node) {
+    var hero = this.generateHeroCard(builder, session, node.data);
+
+    return new builder.Message(session)
+      .textFormat(builder.TextFormat.xml)
+      .attachments([hero]);
+  }
+
+  /**
+   * Generates a Carousel Message
+   *
+   * @param builder
+   * @param session
+   * @param node
+   * @returns {Message}
+   */
+  private generateCarouselMessage(builder, session, node) {
+    var data = node.data;
+
+    if ("undefined" != typeof data.text) {
+      var text = strformat(data.text, session.dialogData);
+      session.send(text);
+    }
+
+    if ("undefined" != typeof data.cards && data.cards.length > 0) {
+      var cards = [];
+      data.cards.forEach((item, index) => {
+        cards.push(this.generateHeroCard(builder, session, item.data));
+      });
+
+      return new builder.Message(session)
+        .textFormat(builder.TextFormat.xml)
+        .attachmentLayout(builder.AttachmentLayout.carousel)
+        .attachments(cards);
+    }
   }
 
   /**
@@ -350,6 +468,19 @@ export class GraphDialog implements IGraphDialog {
     
     if (!(results.response && varname)) 
 			return next();
+
+    if ("undefined" != typeof currentNode.data.validation && "undefined" != typeof currentNode.data.validation.type)
+    {
+      // Perform validations
+      var invalidMsg = "undefined" != typeof currentNode.data.validation.setup.invalid_msg ? currentNode.data.validation.setup.invalid_msg : 'Invalid value';
+      var isValid = Validator.validate(currentNode.data.validation.type, results.response, currentNode.data.validation.setup);
+      if (false == isValid)
+      {
+        session.send(invalidMsg);
+        this.validateCurrentNode = true;
+        return next();
+      }
+    }
 
     switch (currentNode.type) {
       case NodeType.prompt:
@@ -386,7 +517,14 @@ export class GraphDialog implements IGraphDialog {
    * @memberOf GraphDialog
    */
   private setNextStepHandler(session: builder.Session, args, next): any {
-    let nextNode = this.nav.getNextNode(session);
+
+    let nextNode;
+    if (this.validateCurrentNode) {
+      nextNode = this.nav.getCurrentNode(session);
+      this.validateCurrentNode = false;
+    } else {
+      nextNode = this.nav.getNextNode(session);
+    }
 
     if (nextNode) {
       console.log(`step handler node: ${nextNode.id}`);
