@@ -72,6 +72,8 @@ Each step\scenario in the schema is recursive.
   * `sequence`
   * `prompt`
   * `score`
+  * `heroCard`
+  * `carousel`
   * `handler`
   * `end`
 * `steps` - An array of steps or other scenarios
@@ -164,6 +166,54 @@ Under models, specify one or more models you have defined under `models` propert
 
 Under scenarios, define a condition for expected intent and which scenario \ step it should jump to.
 
+
+#### type: heroCard
+
+Creates a Hero Card, displaying images and using buttons
+
+```json
+{
+  "id": "myCard",
+  "type": "heroCard",
+  "data": {
+    "title": "Space Needle",
+    "subtitle": "Our Subtitle",
+    "text": "The <b>Space Needle</b> is an observation tower in Seattle, Washington, a landmark of the Pacific Northwest, and an icon of Seattle.",
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Seattlenighttimequeenanne.jpg/320px-Seattlenighttimequeenanne.jpg"
+    ],
+    "tap": {
+      "action": "openUrl",
+      "value": "https://en.wikipedia.org/wiki/Space_Needle"
+    },
+    "buttons": [
+      {
+        "label": "Wikipedia",
+        "action": "openUrl",
+        "value": "https://en.wikipedia.org/wiki/Space_Needle"
+      }
+    ]
+  }
+}
+```
+
+
+#### type: carousel
+
+Creates a Carousel control, which is a list of Hero Card controls in the same structure as demonstrated above:
+
+```json
+{
+  "id": "myCarousel",
+  "type": "carousel",
+  "data": {
+    "text": "Can you see a carousel of hero cards bellow?",
+    "cards": [
+    ]
+  }
+}
+````
+
 #### type: "handler"
 
 Enables providing a custom code to handle a specific step.
@@ -234,6 +284,52 @@ When prompting or displaying text, it is possible to use a format to insert sess
   "data": { "text": "Welcome {userName}!" }
 }
 ```
+
+## Validations
+
+There following validations are currently supported for validating user input. When a node contains a validation condition, the user will be prompted to provide the value until it satisfies the validation condition:
+
+
+### date validation
+
+```json
+ {
+  "id": "flightDate",
+  "type": "prompt",
+  "data": {
+    "type": "time",
+    "text": "When would you like to fly?",
+    "validation": {
+      "type": "date",
+      "setup": {
+        "min_date": "2016-11-15 00:00:00",
+        "max_date": "2016-11-25 23:59:59",
+        "invalid_msg": "Oops, wrong date!"
+      }
+    }
+  }
+}
+```
+
+### regex validation
+
+```json
+{
+  "id": "isTesting",
+  "type": "prompt",
+  "data": {
+    "type": "text",
+    "text": "What are you doing? (I'll validate using regex: ^test)",
+    "validation": {
+      "type": "regex",
+      "setup": {
+        "pattern": "^test"
+      }
+    }
+  }
+}
+```
+
 
 # License
 [MIT](LICENSE)

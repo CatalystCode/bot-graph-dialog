@@ -31,7 +31,15 @@ export enum NodeType {
 	/**
 	 * an end-the-conversation node
 	 */
-	end
+	end,
+	/**
+	 * a hero card
+	 */
+	heroCard,
+	/**
+	 * a carousel (collection of hero cards)
+	 */
+	carousel
 }
 
 /**
@@ -42,13 +50,13 @@ export enum NodeType {
  */
 export interface INode {
 		//constructor(node: Node, type: string | NodeType);
-    /**
-     * Id
-     * 
-     * @type {string}
-     * @memberOf INode
-     */
-    id: string;
+		/**
+		 * Id
+		 *
+		 * @type {string}
+		 * @memberOf INode
+		 */
+		id: string;
 		/**
 		 * The variable name that will be used to save the user input for this node
 		 * 
