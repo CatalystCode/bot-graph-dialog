@@ -67,10 +67,10 @@ export class Navigator {
    */
   public getCurrentNode(session: builder.Session): INode {
     console.log('getCurrentNode');
-    let currNodeId = <string>session.dialogData._currentNodeId;
+    let currNodeId = <string>session.privateConversationData._currentNodeId;
     if (!currNodeId) {
       let root = this.parser.root;
-      session.dialogData._currentNodeId = root && root.id;
+      session.privateConversationData._currentNodeId = root && root.id;
       return root;
     }
 
@@ -89,7 +89,7 @@ export class Navigator {
   public getNextNode(session: builder.Session) : INode {
     console.log('getNextNode');
     let next : INode = null;
-    let current = this.parser.getNodeInstanceById(session.dialogData._currentNodeId);
+    let current = this.parser.getNodeInstanceById(session.privateConversationData._currentNodeId);
 
     // If there are child scenarios, see if one of them answers a condition
     // In case it is, choose the first step in that scenario to as the next step
@@ -97,7 +97,7 @@ export class Navigator {
     for (var i=0; i<current.scenarios.size(); i++) {
       var scenario = current.scenarios.get(i);
 
-      if (ConditionHandler.evaluateExpression(session.dialogData, scenario.condition)) {
+      if (ConditionHandler.evaluateExpression(session.dialogData.data, scenario.condition)) {
         next = scenario.node || scenario.steps.get(0);
       }
     }
@@ -115,7 +115,7 @@ export class Navigator {
     }
 
     console.log(`getNextNode: [current: ${current.id}, next: ${next && next.id}]`);
-    session.dialogData._currentNodeId = next && next.id;
+    session.privateConversationData._currentNodeId = next && next.id;
 
     return next;
   }

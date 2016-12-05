@@ -86,6 +86,7 @@ export class IntentScorer implements IIntentScorer {
 					if (json.intents[0].score < threashold) return resolve();
 
 					let intent = json.intents[0];
+					intent.entities = json.entities;
 					intent.model = model.name;
 
 					return resolve(<IIntentScore>intent);
