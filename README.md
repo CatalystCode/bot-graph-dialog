@@ -228,6 +228,7 @@ Properties:
 ```
 
 `name` the name for this handler. This will be provided to the callback for loading this handler.
+The data that is collected during the dialog can be found in `session.dialogData.data[<variable name>]`
 
 #### type: "end"
 

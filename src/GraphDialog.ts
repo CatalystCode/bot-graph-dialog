@@ -36,7 +36,21 @@ export interface IGraphDialogOptions extends INavigatorOptions {
    * @type {ICustomNodeTypeHandler[]}
    * @memberOf IGraphDialogOptions
    */
-  customTypeHandlers?: ICustomNodeTypeHandler[]
+  customTypeHandlers?: ICustomNodeTypeHandler[];
+  /**
+   * a {IHandler} objects for custom logics before a step is being processed
+   * 
+   * @type {IHandler}
+   * @memberOf IGraphDialogOptions
+   */
+  onBeforeProcessingStep?: IHandler;
+    /**
+   * a {IHandler} objects for custom logics after a step is being processed
+   * 
+   * @type {IHandler}
+   * @memberOf IGraphDialogOptions
+   */
+  onAfterProcessingStep?: IHandler;
 }
 
 /**
@@ -81,6 +95,40 @@ export interface IGraphDialog {
    * @memberOf IGraphDialog
    */
   getDialog(): IStepFunction;
+  /**
+   * Gets the dialog version from the scenario's json
+   * 
+   * @returns {string}
+   * 
+   * @memberOf IGraphDialog
+   */
+  getDialogVersion(): string;
+  /**
+   * Gets the the dialog id from the scenario's json
+   * 
+   * @returns {string}
+   * 
+   * @memberOf IGraphDialog
+   */
+  getDialogId(): string;
+  /**
+   * Cancel the flow of the existing dialog and starts a new one
+   * 
+   * @returns {void}
+   * 
+   * @memberOf IGraphDialog
+   */
+  restartDialog(session: builder.Session): void;
+  /**
+   * Reloads scenarios for this instance.
+   * Use this when the scenarios were updated on the remote data source.
+   * After calling this method you'll probably want to call the restartDialog API to restart the updated dialog.
+   * 
+   * @returns {Promise<IGraphDialog>}
+   * 
+   * @memberOf IGraphDialog
+   */
+  reload(): Promise<IGraphDialog>;
 }
 
 
@@ -127,16 +175,6 @@ export class GraphDialog implements IGraphDialog {
   private customTypeHandlers: Map<ICustomNodeTypeHandler>;
 
   /**
-   * Unique private key used to bind this dialog on the bot object
-   * 
-   * @private
-   * @type {string}
-   * @memberOf GraphDialog
-   */
-  private loopDialogName: string = '__internalLoop';
-
-
-  /**
    * If set to true, will not travel to next step as the current step needs to be validated
    *
    * @private
@@ -144,6 +182,8 @@ export class GraphDialog implements IGraphDialog {
    */
   private validateCurrentNode: boolean = false;
 
+  private parser: Parser = null;
+  private internalPath: string;
 
 	/**
 	 * Creates an instance of GraphDialog.
@@ -153,16 +193,14 @@ export class GraphDialog implements IGraphDialog {
 	 * @memberOf GraphDialog
 	 */
 	constructor(private options: IGraphDialogOptions = {}) {
-		
-    if (!options.bot) throw new Error('please provide the bot object');
-    
-    this.loopDialogName += options.scenario + uuid.v4();
-    this.setBotDialog();
-    
-    this.intentScorer = new IntentScorer();
+   if (!options.bot) throw new Error('please provide the bot object');
+     this.intentScorer = new IntentScorer();
 
     // Initialize custom handlers
     options.customTypeHandlers = options.customTypeHandlers || new Array<ICustomNodeTypeHandler>();
+    this.internalPath = '/_' + uuid.v4();
+    this.setBotDialog();
+
     this.customTypeHandlers = new Map<CustomNodeTypeHandler>();
     for (let i=0; i < options.customTypeHandlers.length; i++) {
       let handler = <ICustomNodeTypeHandler>options.customTypeHandlers[i];
@@ -170,6 +208,13 @@ export class GraphDialog implements IGraphDialog {
     }
 	}
 
+  public getDialogVersion(): string {
+    return this.parser ? this.parser.version : null;
+  }
+
+  public getDialogId(): string {
+    return this.parser ? this.parser.root.id : null;
+  }
 
   /**
    * Initialize a graph based on graph options like a predefined JSON schema
@@ -180,10 +225,10 @@ export class GraphDialog implements IGraphDialog {
    */
   public init(): Promise<any> {
     return new Promise((resolve, reject) => {
-      let parser = new Parser(this.options);
-      parser.init().then(() => {
+      this.parser = new Parser(this.options);
+      this.parser.init().then(() => {
         console.log('parser is ready');
-        this.nav = new Navigator(parser);
+        this.nav = new Navigator(this.parser);
         return resolve(this);
       }).catch(e => reject(e));
     });
@@ -203,6 +248,31 @@ export class GraphDialog implements IGraphDialog {
     return graphDialog.init();
 	}
 
+  public reload(): Promise<IGraphDialog> {
+    return this.init();
+  }
+
+  public restartDialog(session: builder.Session): void {
+
+    session.privateConversationData = {};
+    console.log('calling loop function after restarting dialog');
+    
+    // find this dialog on the callstack
+    let dialogIndex = -1;
+    let callstack = session.sessionState.callstack || []; 
+
+    for (let i=callstack.length-1; i>=0; i--) {
+      let item = callstack[i];
+      let path = item.id.split('*:')[1];
+      if (path === this.internalPath) {
+        dialogIndex = i;
+        break;
+      }
+    };
+    
+    session.cancelDialog(dialogIndex, this.internalPath);
+  }
+
   /**
    * Returns the dialog steps to bind to the bot object
    * 
@@ -214,11 +284,11 @@ export class GraphDialog implements IGraphDialog {
 		console.log('get dialog');
     return (session: builder.Session, results, next) => {
         console.log('calling loop function for the first time');
-        session.replaceDialog('/' + this.loopDialogName);
+        session.beginDialog(this.internalPath);
     };
-	}
+  }
 
-  /**
+ /**
    * This is where the magic happens. Loops this list of steps for each node.
    * 
    * @private
@@ -227,28 +297,30 @@ export class GraphDialog implements IGraphDialog {
    */
   private setBotDialog(): void {
 
-    this.options.bot.dialog('/' + this.loopDialogName, [
-      (session, results, next) => { 
-          if (results && results._dialogDataFlag) {
-            // restore dialogData state from previous last step
-            let obj:any = {};
-            extend(true, obj, results);
-            delete obj._dialogDataFlag;
-            delete obj['BotBuilder.Data.WaterfallStep'];
-            extend(true, session.dialogData, obj);                    
-        }
-        return this.stepInteractionHandler(session, results, next); 
+    this.options.bot.dialog(this.internalPath, [
+      (session, args, next) => { 
+        session.dialogData.data = args || {};
+        if (this.options.onBeforeProcessingStep)
+          return this.options.onBeforeProcessingStep.call(this, session, args, next); 
+        else return next();
       },
-      (session, results, next) => { 
-        return this.stepResultCollectionHandler(session, results, next); 
+      (session, args, next) => { 
+        return this.stepInteractionHandler(session, args, next); 
       },
-      (session, results, next) => { 
-        return this.setNextStepHandler(session, results, next); 
+      (session, args, next) => { 
+        return this.stepResultCollectionHandler(session, args, next); 
       },
-      (session, results, next) => {
+      (session, args, next) => { 
+        return this.setNextStepHandler(session, args, next); 
+      },
+      (session, args, next) => { 
+        if (this.options.onAfterProcessingStep)
+          return this.options.onAfterProcessingStep.call(this, session, args, next); 
+        else return next();
+      },
+      (session, args, next) => {
         console.log('calling loop function');
-        session.dialogData._dialogDataFlag = true;
-        session.replaceDialog('/' + this.loopDialogName, session.dialogData);
+        session.replaceDialog(this.internalPath, session.dialogData.data);
       }
     ]);
   }
@@ -265,14 +337,14 @@ export class GraphDialog implements IGraphDialog {
    * @memberOf GraphDialog
    */
   private stepInteractionHandler(session: builder.Session, results, next): void {
-    session.dialogData._lastMessage = session.message && session.message.text;
+    session.privateConversationData._lastMessage = session.message && session.message.text;
     let currentNode = this.nav.getCurrentNode(session);
     console.log(`perform action: ${currentNode.id}, ${currentNode.type}`);
 
     switch (currentNode.type) {
 
       case NodeType.text:
-        var text = strformat(currentNode.data.text, session.dialogData);
+        var text = strformat(currentNode.data.text, session.dialogData.data);
         console.log(`sending text for node ${currentNode.id}, text: \'${text}\'`);
         session.send(text);
         return next();
@@ -297,7 +369,7 @@ export class GraphDialog implements IGraphDialog {
          */
         var botModels = currentNode.data.models.map(model => this.nav.models.get(model));
         
-        var score_text = session.dialogData[currentNode.data.source] || session.dialogData._lastMessage;
+        var score_text = session.dialogData.data[currentNode.data.source] || session.privateConversationData._lastMessage;
         console.log(`LUIS scoring for node: ${currentNode.id}, text: \'${score_text}\' LUIS models: ${botModels}`);
 
         this.intentScorer.collectIntents(botModels, score_text, currentNode.data.threashold)
@@ -326,7 +398,7 @@ export class GraphDialog implements IGraphDialog {
       case NodeType.end:
         console.log('ending dialog, node:', currentNode.id);
         session.send(currentNode.data.text || 'Bye bye!');
-        session.endDialog();
+        session.endConversation(); // this will also clear the privateConversationData 
         break;
 
       case NodeType.heroCard:
@@ -432,7 +504,7 @@ export class GraphDialog implements IGraphDialog {
     var data = node.data;
 
     if (data.text) {
-      var text = strformat(data.text, session.dialogData);
+      var text = strformat(data.text, session.dialogData.data);
       session.send(text);
     }
 
@@ -480,26 +552,28 @@ export class GraphDialog implements IGraphDialog {
       }
     }
 
+    let value: any = null;
     switch (currentNode.type) {
       case NodeType.prompt:
 			
 				// TODO switch to enum
         switch (currentNode.data.type) {
           case 'time':
-            session.dialogData[varname] = builder.EntityRecognizer.resolveTime([results.response]);
+            value = builder.EntityRecognizer.resolveTime([results.response]);
             break;
           case 'choice':
-            session.dialogData[varname] = results.response.entity;
+            value = results.response.entity;
             break;
           default:
-            session.dialogData[varname] = results.response;
+            value = results.response;
         }
         break;
       default: 
-        session.dialogData[varname] = results.response;
+        value = results.response;
     }
-   
-    console.log('collecting response for node: %s, variable: %s, value: %s', currentNode.id, varname, session.dialogData[varname]);   
+
+    session.dialogData.data[varname] = value;
+    console.log('collecting response for node: %s, variable: %s, value: %s', currentNode.id, varname, value);   
     return next();
   }
 
@@ -529,8 +603,7 @@ export class GraphDialog implements IGraphDialog {
     }
     else {
 				console.log('ending dialog');
-				session.endDialog();
-				return;
+				return session.endConversation();
 			}
 
     return next();

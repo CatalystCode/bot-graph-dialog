@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as extend from 'extend';
 import * as strformat from 'strformat';
 import * as Promise from 'bluebird';
+import * as crypto from 'crypto';
 
 /**
  * Interface for the IParser options object
@@ -68,6 +69,13 @@ export class Parser {
    * @memberOf Parser
    */
   public root: INode = null;
+  /**
+   * 
+   * 
+   * @type {string}
+   * @memberOf Parser
+   */
+  public version: string = null;
   /**
    * 
    * 
@@ -211,6 +219,8 @@ export class Parser {
         }
 
         this.root = <INode>graph._instance;
+        this.version = graph.version || this.calculateHash(JSON.stringify(origGraph));
+
         return resolve();
       }).catch(e => reject(e));
     });
@@ -420,4 +430,8 @@ export class Parser {
 				this.models.add(model.name, new LuisModel(model.name, model.url));
 			});
 	}
+
+  private calculateHash(text: string) {
+    return crypto.createHash('md5').update(text).digest('hex');
+  }
 }
