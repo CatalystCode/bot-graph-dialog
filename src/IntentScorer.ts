@@ -57,7 +57,6 @@ export class IntentScorer implements IIntentScorer {
 				Promise.all(promises)
 					.then(intents => {
 						var sortedIntents = _.sortBy(_.compact(intents), 'score').reverse();
-						sortedIntents = _.filter(sortedIntents, intent => intent.intent != 'None');
 						resolve(sortedIntents);
 					})
 					.catch(reject);
