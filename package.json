@@ -1,6 +1,6 @@
 {
   "name": "bot-graph-dialog",
-  "version": "3.4.6",
+  "version": "3.4.5",
   "description": "bot graph dialog",
   "main": "index.js",
   "scripts": {
@@ -22,7 +22,6 @@
   },
   "homepage": "https://github.com/CatalystCode/bot-graph-dialog#readme",
   "dependencies": {
-    "bluebird": "^3.4.6",
     "botbuilder": "3.4.4",
     "extend": "^3.0.0",
     "jsep": "^0.3.0",
@@ -30,5 +29,31 @@
     "strformat": "0.0.7",
     "underscore": "^1.8.3",
     "uuid": "^2.0.3"
-  }
+  },
+  "gitHead": "01fd40b70f7e84c71806785dd3fe54500956403f",
+  "_id": "bot-graph-dialog@3.4.5",
+  "_shasum": "695bc3b0e10a8147dd8e1bbce2f26868807f5fde",
+  "_from": "bot-graph-dialog@3.4.5",
+  "_npmVersion": "2.15.1",
+  "_nodeVersion": "4.4.4",
+  "_npmUser": {
+    "name": "amiturgman",
+    "email": "ami.turgman@microsoft.com"
+  },
+  "dist": {
+    "shasum": "695bc3b0e10a8147dd8e1bbce2f26868807f5fde",
+    "tarball": "https://registry.npmjs.org/bot-graph-dialog/-/bot-graph-dialog-3.4.5.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "amiturgman",
+      "email": "ami.turgman@microsoft.com"
+    }
+  ],
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/bot-graph-dialog-3.4.5.tgz_1481033480636_0.8297735422383994"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/bot-graph-dialog/-/bot-graph-dialog-3.4.5.tgz"
 }
