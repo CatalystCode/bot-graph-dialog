@@ -127,6 +127,7 @@ Properties:
 Prompt types can be one of:
 
 * `text` [default] - Prompts for free text. This options is set in case no `type` property is provided
+* `multiprompt` - Prompts for free text or an attachment.
 * `number` - Request for a valid number
 * `time` - Request for a time construct like "2 hours ago", "yesterday", etc.
 * `confirm` - Yes \ No
