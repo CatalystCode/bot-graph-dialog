@@ -23,6 +23,7 @@
   "homepage": "https://github.com/CatalystCode/bot-graph-dialog#readme",
   "dependencies": {
     "botbuilder": "^3.8.4",
+    "botframework_multiprompt": "^1.0.3",
     "extend": "^3.0.0",
     "jsep": "^0.3.0",
     "request-promise": "^4.1.1",
